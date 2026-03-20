@@ -25,6 +25,7 @@ import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-pas
 // Interceptor
 import { authInterceptor } from './shared/interceptors/auth.interceptor';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { ProfileComponent } from './pages/profile/profile.component';
 
 @NgModule({
   declarations: [
@@ -36,6 +37,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
     RegisterComponent,
     ForgotPasswordComponent,
     DashboardComponent,
+    ProfileComponent,
   ],
   imports: [
     BrowserModule,

@@ -39,40 +39,46 @@ export interface AuthResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private readonly API = 'http://localhost:3000/api/auth';
+  private readonly API       = 'http://localhost:3000/api/auth';
   private readonly TOKEN_KEY = 'akiira_token';
-  private readonly USER_KEY = 'akiira_user';
+  private readonly USER_KEY  = 'akiira_user';
 
+  // Load user synchronously on startup so guards work immediately
   private userSubject = new BehaviorSubject<AuthUser | null>(this.loadUser());
-  readonly user$ = this.userSubject.asObservable();
+
+  readonly user$       = this.userSubject.asObservable();
   readonly isLoggedIn$ = this.user$.pipe(map(u => !!u));
 
   get currentUser(): AuthUser | null { return this.userSubject.value; }
-  get isLoggedIn(): boolean { return !!this.currentUser; }
+
+  // This is what authGuard checks — reads from BehaviorSubject, always synchronous
+  get isLoggedIn(): boolean { return !!this.userSubject.value; }
+
   get token(): string | null {
     return localStorage.getItem(this.TOKEN_KEY) || sessionStorage.getItem(this.TOKEN_KEY);
   }
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) {
+    // Debug: log what we found on startup
+    const user = this.loadUser();
+    if (user) {
+      console.log('[AuthService] Session restored for:', user.fullName);
+    } else {
+      console.log('[AuthService] No session found');
+    }
+  }
 
+  // ── Real API calls ───────────────────────────────────────────
   login(creds: LoginCredentials): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(this.API + '/login', creds).pipe(
-      tap(res => {
-        if (res.success && res.user) {
-          this.persistSession(res.user, creds.rememberMe);
-        }
-      }),
+      tap(res => { if (res.success && res.user) { this.persistSession(res.user, creds.rememberMe); } }),
       catchError(err => throwError(() => err.error?.message || 'Login failed.'))
     );
   }
 
   register(data: RegisterData): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(this.API + '/register', data).pipe(
-      tap(res => {
-        if (res.success && res.user) {
-          this.persistSession(res.user, false);
-        }
-      }),
+      tap(res => { if (res.success && res.user) { this.persistSession(res.user, false); } }),
       catchError(err => throwError(() => err.error?.message || 'Registration failed.'))
     );
   }
@@ -108,18 +114,19 @@ export class AuthService {
     window.location.href = this.API + '/google';
   }
 
+  // ── Mock methods (development — no backend needed) ───────────
   mockLogin(creds: LoginCredentials): Observable<AuthResponse> {
     const svc = this;
     return new Observable(observer => {
       setTimeout(() => {
         if (creds.email && creds.password.length >= 6) {
           const user: AuthUser = {
-            id: 'usr_' + Math.random().toString(36).slice(2),
-            fullName: 'Alex Kowalski',
-            email: creds.email,
-            role: 'freelancer',
-            token: 'mock_' + Date.now(),
-            expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+            id:        'usr_' + Math.random().toString(36).slice(2),
+            fullName:  'Chibuzor Joel',
+            email:     creds.email,
+            role:      'freelancer',
+            token:     'mock_' + Date.now(),
+            expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
           };
           svc.persistSession(user, creds.rememberMe);
           observer.next({ success: true, user });
@@ -137,18 +144,18 @@ export class AuthService {
       setTimeout(() => {
         if (data.email && data.password === data.confirmPassword) {
           const user: AuthUser = {
-            id: 'usr_' + Math.random().toString(36).slice(2),
-            fullName: data.fullName,
-            email: data.email,
-            role: data.role,
-            token: 'mock_' + Date.now(),
-            expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+            id:        'usr_' + Math.random().toString(36).slice(2),
+            fullName:  data.fullName,
+            email:     data.email,
+            role:      data.role,
+            token:     'mock_' + Date.now(),
+            expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
           };
           svc.persistSession(user, false);
           observer.next({ success: true, user });
           observer.complete();
         } else {
-          observer.error('Registration failed.');
+          observer.error('Registration failed. Please check your details.');
         }
       }, 1400);
     });
@@ -195,25 +202,42 @@ export class AuthService {
     });
   }
 
-  private persistSession(user: AuthUser, remember: boolean): void {
-    const storage = remember ? localStorage : sessionStorage;
-    storage.setItem(this.TOKEN_KEY, user.token);
-    storage.setItem(this.USER_KEY, JSON.stringify(user));
+  // ── Private helpers ──────────────────────────────────────────
+  persistSession(user: AuthUser, remember: boolean): void {
+    // Always save to localStorage so session survives page refresh
+    localStorage.setItem(this.TOKEN_KEY, user.token);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+
+    // Also save to sessionStorage as backup
+    sessionStorage.setItem(this.TOKEN_KEY, user.token);
+    sessionStorage.setItem(this.USER_KEY, JSON.stringify(user));
+
     this.userSubject.next(user);
   }
 
   private loadUser(): AuthUser | null {
     try {
-      const raw = localStorage.getItem(this.USER_KEY) ?? sessionStorage.getItem(this.USER_KEY);
+      // Check localStorage first, then sessionStorage
+      const raw = localStorage.getItem(this.USER_KEY)
+                  || sessionStorage.getItem(this.USER_KEY);
+
       if (!raw) { return null; }
+
       const user: AuthUser = JSON.parse(raw);
+
+      // Check token expiry
       if (user.expiresAt && Date.now() > user.expiresAt) {
+        console.log('[AuthService] Session expired, clearing.');
         localStorage.removeItem(this.USER_KEY);
+        localStorage.removeItem(this.TOKEN_KEY);
         sessionStorage.removeItem(this.USER_KEY);
+        sessionStorage.removeItem(this.TOKEN_KEY);
         return null;
       }
+
       return user;
-    } catch {
+    } catch (e) {
+      console.error('[AuthService] Error loading user:', e);
       return null;
     }
   }

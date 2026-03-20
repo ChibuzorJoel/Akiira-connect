@@ -1,0 +1,580 @@
+<!-- src/app/pages/profile/profile.component.html -->
+<div class="profile-page">
+
+    <!-- ── Profile banner ── -->
+    <div class="profile-banner">
+      <div class="banner-bg"></div>
+      <div class="profile-container">
+        <div class="banner-inner">
+  
+          <!-- Avatar -->
+          <div class="banner-avatar-wrap">
+            <div class="banner-avatar">{{ userInitials }}</div>
+            <button class="avatar-upload-btn" title="Change photo">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </button>
+          </div>
+  
+          <!-- Identity -->
+          <div class="banner-info">
+            <h1 class="banner-name">{{ profile.fullName || currentUser?.fullName }}</h1>
+            <p class="banner-headline">{{ profile.headline }}</p>
+            <div class="banner-meta">
+              <span>
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                {{ profile.location }}
+              </span>
+              <span class="banner-avail" [style.color]="availabilityColor">
+                <span class="avail-dot" [style.background]="availabilityColor"></span>
+                {{ availabilityLabel }}
+              </span>
+            </div>
+          </div>
+  
+          <!-- Strength meter -->
+          <div class="banner-strength">
+            <div class="bs-ring">
+              <svg viewBox="0 0 60 60" width="60" height="60">
+                <circle cx="30" cy="30" r="24" fill="none" stroke="#e4e4e7" stroke-width="5"/>
+                <circle cx="30" cy="30" r="24" fill="none"
+                  [attr.stroke]="strengthColor"
+                  stroke-width="5"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="'150.8'"
+                  [attr.stroke-dashoffset]="150.8 - (150.8 * profileStrength / 100)"
+                  transform="rotate(-90 30 30)"
+                  style="transition: stroke-dashoffset 0.6s ease"/>
+                <text x="30" y="35" text-anchor="middle" font-size="13" font-weight="800" font-family="Syne, sans-serif" [attr.fill]="strengthColor">
+                  {{ profileStrength }}%
+                </text>
+              </svg>
+            </div>
+            <div class="bs-info">
+              <div class="bs-label">Profile strength</div>
+              <div class="bs-status" [style.color]="strengthColor">{{ strengthLabel }}</div>
+            </div>
+          </div>
+  
+        </div>
+  
+        <!-- Profile quick actions -->
+        <div class="banner-actions">
+          <a [href]="'mailto:' + profile.email" class="ba-btn ba-btn-ghost" *ngIf="profile.email">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            Email
+          </a>
+          <a [href]="'https://' + profile.github" target="_blank" class="ba-btn ba-btn-ghost" *ngIf="profile.github">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+            </svg>
+            GitHub
+          </a>
+          <a [href]="'https://' + profile.linkedin" target="_blank" class="ba-btn ba-btn-ghost" *ngIf="profile.linkedin">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            LinkedIn
+          </a>
+        </div>
+      </div>
+    </div>
+  
+    <!-- ── Save toast ── -->
+    <div class="save-toast" [class.show]="saveSuccess">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      {{ saveSuccess }}
+    </div>
+  
+    <!-- ── Main layout ── -->
+    <div class="profile-container profile-main">
+      <div class="profile-body">
+  
+        <!-- ── Sidebar nav ── -->
+        <aside class="profile-nav">
+          <button
+            *ngFor="let s of sections"
+            class="pn-item"
+            [class.active]="activeSection === s.id"
+            (click)="setSection(s.id)"
+          >
+            <span class="pn-icon">{{ s.icon }}</span>
+            <span class="pn-label">{{ s.label }}</span>
+          </button>
+  
+          <!-- Completion tips -->
+          <div class="completion-card">
+            <div class="cc-header">
+              <div class="cc-bar-wrap">
+                <div class="cc-bar" [style.width]="profileStrength + '%'" [style.background]="strengthColor"></div>
+              </div>
+              <span class="cc-pct" [style.color]="strengthColor">{{ profileStrength }}%</span>
+            </div>
+            <div class="cc-tips">
+              <div class="cc-tip" *ngIf="profile.skills.length < 6">
+                <span class="cct-dot"></span> Add more skills ({{ 6 - profile.skills.length }} more)
+              </div>
+              <div class="cc-tip" *ngIf="profile.portfolio.length < 2">
+                <span class="cct-dot"></span> Add portfolio projects
+              </div>
+              <div class="cc-tip" *ngIf="!profile.website">
+                <span class="cct-dot"></span> Add your website URL
+              </div>
+            </div>
+          </div>
+        </aside>
+  
+        <!-- ── Content panels ── -->
+        <div class="profile-content">
+  
+          <!-- ════ ABOUT ════ -->
+          <div class="profile-section" *ngIf="activeSection === 'about'">
+  
+            <!-- Bio card -->
+            <div class="ps-card">
+              <div class="psc-header">
+                <h3 class="psc-title">About Me</h3>
+                <button class="psc-edit-btn" (click)="startEditAbout()" *ngIf="!editingAbout">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Edit
+                </button>
+              </div>
+  
+              <ng-container *ngIf="!editingAbout">
+                <h2 class="about-name">{{ profile.fullName || currentUser?.fullName }}</h2>
+                <p class="about-headline">{{ profile.headline }}</p>
+                <p class="about-bio">{{ profile.bio }}</p>
+              </ng-container>
+  
+              <ng-container *ngIf="editingAbout">
+                <div class="form-row">
+                  <label class="form-label">Full name</label>
+                  <input class="form-input" type="text" [(ngModel)]="editProfile.fullName" placeholder="Your full name"/>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Professional headline</label>
+                  <input class="form-input" type="text" [(ngModel)]="editProfile.headline" placeholder="e.g. Senior Angular Developer · Remote"/>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Bio</label>
+                  <textarea class="form-textarea" [(ngModel)]="editProfile.bio" rows="5" placeholder="Tell employers about yourself…"></textarea>
+                  <span class="form-hint">{{ (editProfile.bio || '').length }} / 500 characters</span>
+                </div>
+                <div class="form-actions">
+                  <button class="btn-cancel" (click)="editingAbout = false">Cancel</button>
+                  <button class="btn-save" (click)="saveAbout()">Save Changes</button>
+                </div>
+              </ng-container>
+            </div>
+  
+            <!-- Contact card -->
+            <div class="ps-card">
+              <div class="psc-header">
+                <h3 class="psc-title">Contact & Links</h3>
+                <button class="psc-edit-btn" (click)="startEditContact()" *ngIf="!editingContact">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Edit
+                </button>
+              </div>
+  
+              <ng-container *ngIf="!editingContact">
+                <div class="contact-grid">
+                  <div class="contact-item">
+                    <span class="ci-icon">📧</span>
+                    <div><div class="ci-label">Email</div><div class="ci-val">{{ profile.email }}</div></div>
+                  </div>
+                  <div class="contact-item">
+                    <span class="ci-icon">📱</span>
+                    <div><div class="ci-label">Phone</div><div class="ci-val">{{ profile.phone }}</div></div>
+                  </div>
+                  <div class="contact-item">
+                    <span class="ci-icon">📍</span>
+                    <div><div class="ci-label">Location</div><div class="ci-val">{{ profile.location }}</div></div>
+                  </div>
+                  <div class="contact-item">
+                    <span class="ci-icon">🌐</span>
+                    <div><div class="ci-label">Website</div><div class="ci-val"><a [href]="profile.website" target="_blank" class="ci-link">{{ profile.website }}</a></div></div>
+                  </div>
+                  <div class="contact-item">
+                    <span class="ci-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                    </span>
+                    <div><div class="ci-label">GitHub</div><div class="ci-val"><a [href]="'https://' + profile.github" target="_blank" class="ci-link">{{ profile.github }}</a></div></div>
+                  </div>
+                  <div class="contact-item">
+                    <span class="ci-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    </span>
+                    <div><div class="ci-label">LinkedIn</div><div class="ci-val"><a [href]="'https://' + profile.linkedin" target="_blank" class="ci-link">{{ profile.linkedin }}</a></div></div>
+                  </div>
+                </div>
+              </ng-container>
+  
+              <ng-container *ngIf="editingContact">
+                <div class="form-grid-2">
+                  <div class="form-row">
+                    <label class="form-label">Phone</label>
+                    <input class="form-input" type="tel" [(ngModel)]="editProfile.phone" placeholder="+1 (555) 000-0000"/>
+                  </div>
+                  <div class="form-row">
+                    <label class="form-label">Location</label>
+                    <input class="form-input" type="text" [(ngModel)]="editProfile.location" placeholder="City, Country"/>
+                  </div>
+                  <div class="form-row">
+                    <label class="form-label">Website</label>
+                    <input class="form-input" type="url" [(ngModel)]="editProfile.website" placeholder="https://yoursite.com"/>
+                  </div>
+                  <div class="form-row">
+                    <label class="form-label">GitHub</label>
+                    <input class="form-input" type="text" [(ngModel)]="editProfile.github" placeholder="github.com/handle"/>
+                  </div>
+                  <div class="form-row">
+                    <label class="form-label">LinkedIn</label>
+                    <input class="form-input" type="text" [(ngModel)]="editProfile.linkedin" placeholder="linkedin.com/in/name"/>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button class="btn-cancel" (click)="editingContact = false">Cancel</button>
+                  <button class="btn-save" (click)="saveContact()">Save Changes</button>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+  
+          <!-- ════ EXPERIENCE ════ -->
+          <div class="profile-section" *ngIf="activeSection === 'experience'">
+            <div class="ps-card">
+              <div class="psc-header">
+                <h3 class="psc-title">Work Experience</h3>
+                <button class="psc-add-btn" (click)="addExperience()">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add
+                </button>
+              </div>
+  
+              <div class="exp-list">
+                <div class="exp-item" *ngFor="let exp of profile.experience; trackBy: trackById">
+  
+                  <!-- View mode -->
+                  <ng-container *ngIf="editingExp !== exp.id">
+                    <div class="exp-header">
+                      <div class="exp-dot" [class.current]="exp.current"></div>
+                      <div class="exp-info">
+                        <div class="exp-title">{{ exp.title }}</div>
+                        <div class="exp-company">{{ exp.company }} · {{ exp.location }}</div>
+                        <div class="exp-dates">
+                          {{ exp.startDate }} — {{ exp.current ? 'Present' : exp.endDate }}
+                          <span class="exp-current-badge" *ngIf="exp.current">Current</span>
+                        </div>
+                        <p class="exp-desc">{{ exp.description }}</p>
+                      </div>
+                      <div class="exp-actions">
+                        <button class="exp-btn" (click)="editingExp = exp.id">
+                          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button class="exp-btn exp-btn-del" (click)="removeExperience(exp.id)">
+                          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </ng-container>
+  
+                  <!-- Edit mode -->
+                  <ng-container *ngIf="editingExp === exp.id">
+                    <div class="form-grid-2">
+                      <div class="form-row">
+                        <label class="form-label">Job title</label>
+                        <input class="form-input" type="text" [(ngModel)]="exp.title" placeholder="e.g. Senior Developer"/>
+                      </div>
+                      <div class="form-row">
+                        <label class="form-label">Company</label>
+                        <input class="form-input" type="text" [(ngModel)]="exp.company" placeholder="Company name"/>
+                      </div>
+                      <div class="form-row">
+                        <label class="form-label">Location</label>
+                        <input class="form-input" type="text" [(ngModel)]="exp.location" placeholder="Remote / City"/>
+                      </div>
+                      <div class="form-row">
+                        <label class="form-label">Start date</label>
+                        <input class="form-input" type="text" [(ngModel)]="exp.startDate" placeholder="Jan 2022"/>
+                      </div>
+                      <div class="form-row">
+                        <label class="form-label">End date</label>
+                        <input class="form-input" type="text" [(ngModel)]="exp.endDate" [disabled]="exp.current" placeholder="Dec 2023"/>
+                      </div>
+                      <div class="form-row form-row-check">
+                        <label class="check-label">
+                          <input type="checkbox" [(ngModel)]="exp.current"/>
+                          <span>I currently work here</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="form-row">
+                      <label class="form-label">Description</label>
+                      <textarea class="form-textarea" [(ngModel)]="exp.description" rows="3" placeholder="Describe your responsibilities and achievements…"></textarea>
+                    </div>
+                    <div class="form-actions">
+                      <button class="btn-cancel" (click)="editingExp = -1">Cancel</button>
+                      <button class="btn-save" (click)="saveExperience(exp)">Save</button>
+                    </div>
+                  </ng-container>
+  
+                </div>
+  
+                <div class="empty-section" *ngIf="profile.experience.length === 0">
+                  <span>💼</span>
+                  <p>No experience added yet. Add your first role!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- ════ SKILLS ════ -->
+          <div class="profile-section" *ngIf="activeSection === 'skills'">
+            <div class="ps-card">
+              <div class="psc-header">
+                <h3 class="psc-title">Skills</h3>
+                <span class="psc-count">{{ profile.skills.length }} skills</span>
+              </div>
+  
+              <div class="skills-wrap">
+                <div class="skill-chip" *ngFor="let skill of profile.skills">
+                  {{ skill }}
+                  <button class="skill-remove" (click)="removeSkill(skill)" aria-label="Remove skill">×</button>
+                </div>
+              </div>
+  
+              <div class="skill-add-row">
+                <input
+                  class="form-input skill-input"
+                  type="text"
+                  [(ngModel)]="newSkill"
+                  placeholder="Add a skill (e.g. Python, Figma, AWS)…"
+                  (keydown)="onSkillKeydown($event)"
+                />
+                <button class="btn-save skill-add-btn" (click)="addSkill()" [disabled]="!newSkill.trim()">
+                  Add
+                </button>
+              </div>
+  
+              <p class="form-hint" style="margin-top:8px">
+                Press <kbd>Enter</kbd> or click Add. Popular: Angular, React, Node.js, Python, AWS, Figma, Docker
+              </p>
+            </div>
+          </div>
+  
+          <!-- ════ PORTFOLIO ════ -->
+          <div class="profile-section" *ngIf="activeSection === 'portfolio'">
+            <div class="ps-card">
+              <div class="psc-header">
+                <h3 class="psc-title">Portfolio Projects</h3>
+                <button class="psc-add-btn" (click)="addPortfolio()">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Project
+                </button>
+              </div>
+  
+              <div class="portfolio-grid">
+                <div class="portfolio-card" *ngFor="let item of profile.portfolio; trackBy: trackById">
+                  <div class="pc-top">
+                    <div class="pc-icon">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                      </svg>
+                    </div>
+                    <div class="pc-actions">
+                      <a [href]="item.url" target="_blank" class="pc-link-btn" *ngIf="item.url">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      </a>
+                      <button class="exp-btn exp-btn-del" (click)="removePortfolio(item.id)">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <input class="form-input pc-title-input" type="text" [(ngModel)]="item.title" placeholder="Project title"/>
+                  <textarea class="form-textarea pc-desc-input" [(ngModel)]="item.description" rows="2" placeholder="Brief description of the project…"></textarea>
+                  <input class="form-input" type="url" [(ngModel)]="item.url" placeholder="https://github.com/yourproject" style="margin-top:8px"/>
+                  <div class="pc-tags">
+                    <span *ngFor="let tag of item.tags" class="pc-tag">{{ tag }}</span>
+                  </div>
+                </div>
+  
+                <div class="empty-section" *ngIf="profile.portfolio.length === 0">
+                  <span>🎨</span>
+                  <p>No projects yet. Showcase your best work!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- ════ EDUCATION ════ -->
+          <div class="profile-section" *ngIf="activeSection === 'education'">
+            <div class="ps-card">
+              <div class="psc-header">
+                <h3 class="psc-title">Education</h3>
+                <button class="psc-add-btn" (click)="addEducation()">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add
+                </button>
+              </div>
+  
+              <div class="edu-list">
+                <div class="edu-item" *ngFor="let edu of profile.education; trackBy: trackById">
+  
+                  <ng-container *ngIf="editingEdu !== edu.id">
+                    <div class="edu-icon">🎓</div>
+                    <div class="edu-info">
+                      <div class="edu-degree">{{ edu.degree }} in {{ edu.field }}</div>
+                      <div class="edu-school">{{ edu.school }}</div>
+                      <div class="edu-year">Graduated {{ edu.year }}</div>
+                    </div>
+                    <div class="exp-actions">
+                      <button class="exp-btn" (click)="editingEdu = edu.id">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button class="exp-btn exp-btn-del" (click)="removeEducation(edu.id)">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      </button>
+                    </div>
+                  </ng-container>
+  
+                  <ng-container *ngIf="editingEdu === edu.id">
+                    <div class="form-grid-2" style="flex:1">
+                      <div class="form-row"><label class="form-label">Degree</label><input class="form-input" [(ngModel)]="edu.degree" placeholder="Bachelor's / Master's…"/></div>
+                      <div class="form-row"><label class="form-label">Field of study</label><input class="form-input" [(ngModel)]="edu.field" placeholder="Computer Science"/></div>
+                      <div class="form-row"><label class="form-label">School / University</label><input class="form-input" [(ngModel)]="edu.school" placeholder="University of Lagos"/></div>
+                      <div class="form-row"><label class="form-label">Graduation year</label><input class="form-input" [(ngModel)]="edu.year" placeholder="2022"/></div>
+                    </div>
+                    <div class="form-actions" style="margin-top:12px">
+                      <button class="btn-cancel" (click)="editingEdu = -1">Cancel</button>
+                      <button class="btn-save" (click)="saveEducation(edu)">Save</button>
+                    </div>
+                  </ng-container>
+  
+                </div>
+  
+                <div class="empty-section" *ngIf="profile.education.length === 0">
+                  <span>🎓</span>
+                  <p>No education added yet.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- ════ AVAILABILITY ════ -->
+          <div class="profile-section" *ngIf="activeSection === 'settings'">
+            <div class="ps-card">
+              <div class="psc-header">
+                <h3 class="psc-title">Availability & Preferences</h3>
+                <button class="psc-edit-btn" (click)="startEditAvail()" *ngIf="!editingAvail">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Edit
+                </button>
+              </div>
+  
+              <!-- View -->
+              <ng-container *ngIf="!editingAvail">
+                <div class="avail-grid">
+                  <div class="avail-item">
+                    <div class="ai-label">Status</div>
+                    <div class="ai-val">
+                      <span class="avail-badge" [style.background]="availabilityColor + '18'" [style.color]="availabilityColor" [style.border-color]="availabilityColor + '30'">
+                        <span class="avail-dot" [style.background]="availabilityColor"></span>
+                        {{ availabilityLabel }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="avail-item">
+                    <div class="ai-label">Hourly rate</div>
+                    <div class="ai-val ai-val-big">{{ profile.hourlyRate }}<span>/hr</span></div>
+                  </div>
+                  <div class="avail-item">
+                    <div class="ai-label">Work preference</div>
+                    <div class="ai-val">{{ profile.remoteOnly ? '🌍 Remote only' : '🏢 Open to on-site' }}</div>
+                  </div>
+                  <div class="avail-item">
+                    <div class="ai-label">Job types</div>
+                    <div class="ai-val avail-tags">
+                      <span *ngFor="let t of profile.jobTypes" class="avail-tag">{{ t }}</span>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+  
+              <!-- Edit -->
+              <ng-container *ngIf="editingAvail">
+                <div class="form-row">
+                  <label class="form-label">Availability status</label>
+                  <div class="avail-options">
+                    <label
+                      *ngFor="let opt of availabilityOptions"
+                      class="avail-option"
+                      [class.selected]="editProfile.availability === opt.value"
+                    >
+                      <input type="radio" name="avail" [value]="opt.value" [(ngModel)]="editProfile.availability"/>
+                      <span class="ao-dot" [style.background]="opt.color"></span>
+                      {{ opt.label }}
+                    </label>
+                  </div>
+                </div>
+  
+                <div class="form-row">
+                  <label class="form-label">Hourly rate</label>
+                  <div class="rate-input-wrap">
+                    <span class="rate-prefix">$</span>
+                    <input class="form-input rate-input" type="text" [(ngModel)]="editProfile.hourlyRate" placeholder="65"/>
+                    <span class="rate-suffix">/hr</span>
+                  </div>
+                </div>
+  
+                <div class="form-row">
+                  <label class="form-label">Job types (select all that apply)</label>
+                  <div class="job-type-options">
+                    <button
+                      *ngFor="let type of jobTypeOptions"
+                      class="jto-chip"
+                      [class.selected]="isJobTypeSelected(type)"
+                      (click)="toggleJobType(type)"
+                      type="button"
+                    >{{ type }}</button>
+                  </div>
+                </div>
+  
+                <div class="form-row">
+                  <label class="check-label">
+                    <input type="checkbox" [(ngModel)]="editProfile.remoteOnly"/>
+                    <span>Remote only — don't show on-site jobs</span>
+                  </label>
+                </div>
+  
+                <div class="form-actions">
+                  <button class="btn-cancel" (click)="editingAvail = false">Cancel</button>
+                  <button class="btn-save" (click)="saveAvail()">Save Preferences</button>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+  
+        </div>
+      </div>
+    </div>
+  </div>

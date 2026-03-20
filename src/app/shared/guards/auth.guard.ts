@@ -1,33 +1,30 @@
-// src/app/shared/guards/auth.guard.ts
-import { inject }         from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { AuthService }    from '../services/auth.service';
 
-/**
- * Use on protected routes:
- * { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] }
- */
-export const authGuard: CanActivateFn = () => {
+import { inject }                from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService }           from '../services/auth.service';
+
+export const authGuard: CanActivateFn = (route, state) => {
   const auth   = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.isLoggedIn) return true;
+  if (auth.isLoggedIn) {
+    return true;
+  }
 
+  // Save the URL they tried to visit so we redirect back after login
   router.navigate(['/auth/login'], {
-    queryParams: { returnUrl: window.location.pathname }
+    queryParams: { returnUrl: state.url }
   });
   return false;
 };
 
-/**
- * Redirect already-logged-in users away from auth pages:
- * { path: 'auth/login', component: LoginComponent, canActivate: [guestGuard] }
- */
 export const guestGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
 
-  if (!auth.isLoggedIn) return true;
+  if (!auth.isLoggedIn) {
+    return true;
+  }
 
   router.navigate(['/dashboard']);
   return false;
