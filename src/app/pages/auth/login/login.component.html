@@ -1,0 +1,282 @@
+<!-- ══════════════════════════════════════════════
+     LOGIN PAGE — Split panel layout
+     Left: dark brand panel  |  Right: login form
+══════════════════════════════════════════════ -->
+<div class="auth-page">
+
+    <!-- ─────────────── LEFT PANEL ─────────────── -->
+    <div class="auth-left" aria-hidden="true">
+  
+      <!-- Background layers -->
+      <div class="al-bg">
+        <div class="al-orb al-orb-1"></div>
+        <div class="al-orb al-orb-2"></div>
+        <div class="al-grid"></div>
+        <div class="al-stripe"></div>
+      </div>
+  
+      <div class="al-inner">
+  
+        <!-- Logo -->
+        <a routerLink="/" class="auth-logo">
+          <div class="auth-logo-mark">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <path d="M10 1L2 5.5V14.5L10 19L18 14.5V5.5L10 1Z" fill="#0c0c0e" opacity=".82"/>
+              <path d="M10 5.5L5.5 8.5V14L10 17L14.5 14V8.5L10 5.5Z" fill="#0c0c0e"/>
+            </svg>
+          </div>
+          <span class="auth-logo-name">Akiira<strong>Connect</strong></span>
+        </a>
+  
+        <!-- Headline -->
+        <div class="al-headline">
+          <div class="al-eyebrow">
+            <span class="al-pulse"></span>
+            48,200+ remote jobs live right now
+          </div>
+          <h2 class="al-title">
+            Your next great<br>
+            remote job is<br>
+            <em>one swipe away.</em>
+          </h2>
+          <p class="al-sub">
+            Join 320,000+ freelancers on Akiira Connect
+            to land roles without the recruiter gatekeeping.
+          </p>
+        </div>
+  
+        <!-- Stats pills -->
+        <div class="al-stats">
+          <div class="al-stat">
+            <strong>18hrs</strong>
+            <span>Avg. Response</span>
+          </div>
+          <div class="al-stat-div"></div>
+          <div class="al-stat">
+            <strong>$120K+</strong>
+            <span>Avg. Salary</span>
+          </div>
+          <div class="al-stat-div"></div>
+          <div class="al-stat">
+            <strong>98%</strong>
+            <span>Satisfaction</span>
+          </div>
+        </div>
+  
+        <!-- Rotating testimonial -->
+        <div class="al-testi">
+          <div
+            class="at-card"
+            *ngFor="let t of testimonials; let i = index"
+            [class.active]="i === activeTestimonial"
+          >
+            <div class="at-quote">"</div>
+            <p class="at-text">{{ t.text }}</p>
+            <div class="at-footer">
+              <div class="at-av" [style.background]="t.color">{{ t.avatar }}</div>
+              <div class="at-info">
+                <div class="at-name">{{ t.name }}</div>
+                <div class="at-role">{{ t.role }}</div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Dots -->
+          <div class="at-dots">
+            <button
+              *ngFor="let t of testimonials; let i = index"
+              class="at-dot"
+              [class.active]="i === activeTestimonial"
+              (click)="setTestimonial(i)"
+              [attr.aria-label]="'Testimonial ' + (i + 1)"
+            ></button>
+          </div>
+        </div>
+  
+      </div>
+    </div>
+  
+    <!-- ─────────────── RIGHT PANEL ─────────────── -->
+    <main class="auth-right">
+      <div class="ar-inner">
+  
+        <!-- Mobile logo (hidden on desktop) -->
+        <a routerLink="/" class="auth-logo auth-logo-mobile">
+          <div class="auth-logo-mark">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <path d="M10 1L2 5.5V14.5L10 19L18 14.5V5.5L10 1Z" fill="#0c0c0e" opacity=".82"/>
+              <path d="M10 5.5L5.5 8.5V14L10 17L14.5 14V8.5L10 5.5Z" fill="#0c0c0e"/>
+            </svg>
+          </div>
+          <span class="auth-logo-name">Akiira<strong>Connect</strong></span>
+        </a>
+  
+        <!-- Form header -->
+        <div class="ar-header">
+          <h1 class="ar-title">Welcome back</h1>
+          <p class="ar-sub">
+            Sign in to your account to continue your job search.
+          </p>
+        </div>
+  
+        <!-- Server error banner -->
+        <div class="error-banner" *ngIf="serverError" role="alert">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ serverError }}
+        </div>
+  
+        <!-- Google sign-in -->
+        <button class="btn-google" type="button" (click)="loginWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Continue with Google
+        </button>
+  
+        <!-- Divider -->
+        <div class="auth-divider">
+          <span class="auth-divider-line"></span>
+          <span class="auth-divider-text">or sign in with email</span>
+          <span class="auth-divider-line"></span>
+        </div>
+  
+        <!-- Login form -->
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate autocomplete="on">
+  
+          <!-- Email field -->
+          <div class="form-group" [class.error]="isFieldInvalid('email')" [class.success]="isFieldValid('email')">
+            <label class="form-label" for="email">Email address</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </span>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                class="form-input"
+                placeholder="you@example.com"
+                autocomplete="email"
+                [attr.aria-invalid]="isFieldInvalid('email')"
+                aria-describedby="email-error"
+              />
+              <!-- Valid check -->
+              <span class="input-valid-icon" *ngIf="isFieldValid('email')">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+            </div>
+            <div class="field-error" id="email-error" role="alert" *ngIf="isFieldInvalid('email')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ fieldError('email') }}
+            </div>
+          </div>
+  
+          <!-- Password field -->
+          <div class="form-group" [class.error]="isFieldInvalid('password')" [class.success]="isFieldValid('password')">
+            <div class="label-row">
+              <label class="form-label" for="password">Password</label>
+              <a routerLink="/auth/forgot-password" class="forgot-link">Forgot password?</a>
+            </div>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+              <input
+                id="password"
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                class="form-input"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                [attr.aria-invalid]="isFieldInvalid('password')"
+                aria-describedby="password-error"
+              />
+              <!-- Show/hide password -->
+              <button
+                type="button"
+                class="input-eye-btn"
+                (click)="showPassword = !showPassword"
+                [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+              >
+                <!-- Eye open -->
+                <svg *ngIf="!showPassword" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <!-- Eye closed -->
+                <svg *ngIf="showPassword" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+            <div class="field-error" id="password-error" role="alert" *ngIf="isFieldInvalid('password')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ fieldError('password') }}
+            </div>
+          </div>
+  
+          <!-- Remember me -->
+          <label class="remember-row">
+            <div class="custom-checkbox">
+              <input type="checkbox" formControlName="rememberMe" id="rememberMe"/>
+              <span class="checkbox-box">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+            </div>
+            <span class="remember-label">Keep me signed in for 30 days</span>
+          </label>
+  
+          <!-- Submit button -->
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="isLoading"
+            [class.loading]="isLoading"
+          >
+            <span class="btn-submit-text" *ngIf="!isLoading">
+              Sign In
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </span>
+            <span class="btn-submit-loader" *ngIf="isLoading" aria-label="Signing in…">
+              <span class="spinner"></span>
+              Signing in…
+            </span>
+          </button>
+  
+        </form>
+  
+        <!-- Register link -->
+        <p class="auth-switch">
+          Don't have an account?
+          <a routerLink="/auth/register" class="auth-switch-link">Create one free →</a>
+        </p>
+  
+        <!-- Trust signals -->
+        <div class="auth-trust">
+          <span>🔒 256-bit SSL</span>
+          <span>·</span>
+          <span>No spam, ever</span>
+          <span>·</span>
+          <span>Cancel anytime</span>
+        </div>
+  
+      </div>
+    </main>
+  </div>

@@ -1,0 +1,451 @@
+<!-- src/app/pages/dashboard/dashboard.component.html -->
+<div class="dash-page">
+    <div class="dash-container">
+      <div class="dash-body">
+  
+        <!-- ══════════════════════════════
+             SIDEBAR
+        ══════════════════════════════ -->
+        <aside class="dash-sidebar">
+  
+          <!-- Profile card -->
+          <div class="profile-card">
+            <div class="pc-avatar-ring">
+              <div class="pc-avatar">
+                {{ userInitial }}
+              </div>
+              <div class="pc-status-dot"></div>
+            </div>
+  
+            <div class="pc-name">{{ firstName }}</div>
+            <div class="pc-role">Full-Stack Developer</div>
+            <div class="pc-avail">
+              <span class="avail-dot"></span>
+              Open to Work
+            </div>
+  
+            <!-- Profile strength -->
+            <div class="pc-strength">
+              <div class="pcs-header">
+                <span class="pcs-label">Profile strength</span>
+                <span class="pcs-pct">{{ profileStrength }}%</span>
+              </div>
+              <div class="pcs-track">
+                <div class="pcs-fill" [style.width]="profileStrength + '%'"></div>
+              </div>
+            </div>
+  
+            <!-- Quick stats row -->
+            <div class="pc-stats">
+              <div class="pcs-item">
+                <strong>{{ applications.length }}</strong>
+                <span>Applied</span>
+              </div>
+              <div class="pcs-divider"></div>
+              <div class="pcs-item">
+                <strong>{{ savedJobs.length }}</strong>
+                <span>Saved</span>
+              </div>
+              <div class="pcs-divider"></div>
+              <div class="pcs-item">
+                <strong>3</strong>
+                <span>Interviews</span>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Nav -->
+          <nav class="dash-nav">
+            <button
+              class="dn-item"
+              [class.active]="activeTab === 'overview'"
+              (click)="setTab('overview')"
+            >
+              <span class="dn-icon">📊</span>
+              <span class="dn-label">Overview</span>
+            </button>
+  
+            <button
+              class="dn-item"
+              [class.active]="activeTab === 'applications'"
+              (click)="setTab('applications')"
+            >
+              <span class="dn-icon">📋</span>
+              <span class="dn-label">My Applications</span>
+              <span class="dn-badge">{{ applications.length }}</span>
+            </button>
+  
+            <button
+              class="dn-item"
+              [class.active]="activeTab === 'saved'"
+              (click)="setTab('saved')"
+            >
+              <span class="dn-icon">🔖</span>
+              <span class="dn-label">Saved Jobs</span>
+              <span class="dn-badge">{{ savedJobs.length }}</span>
+            </button>
+  
+            <button
+              class="dn-item"
+              [class.active]="activeTab === 'messages'"
+              (click)="setTab('messages')"
+            >
+              <span class="dn-icon">💬</span>
+              <span class="dn-label">Messages</span>
+              <span class="dn-badge dn-badge-amber" *ngIf="totalUnread > 0">{{ totalUnread }}</span>
+            </button>
+  
+            <div class="dn-divider"></div>
+  
+            <a routerLink="/profile" class="dn-item">
+              <span class="dn-icon">👤</span>
+              <span class="dn-label">Edit Profile</span>
+            </a>
+            <a routerLink="/settings" class="dn-item">
+              <span class="dn-icon">⚙️</span>
+              <span class="dn-label">Settings</span>
+            </a>
+          </nav>
+  
+          <!-- Profile tips -->
+          <div class="tips-card">
+            <div class="tips-head">
+              <span class="tips-rocket">🚀</span>
+              <strong>Complete your profile</strong>
+            </div>
+            <div class="tip-item" *ngFor="let tip of profileTips">
+              <span class="tip-icon" [class.done]="tip.done">
+                {{ tip.done ? '✓' : '○' }}
+              </span>
+              <span [class.tip-done-text]="tip.done">{{ tip.text }}</span>
+            </div>
+          </div>
+  
+        </aside>
+  
+        <!-- ══════════════════════════════
+             MAIN CONTENT
+        ══════════════════════════════ -->
+        <main class="dash-main">
+  
+          <!-- Welcome banner -->
+          <div class="welcome-banner">
+            <div class="wb-left">
+              <div class="wb-greeting">Good morning, {{ firstName }} 👋</div>
+              <div class="wb-sub">You have 3 interviews scheduled this week. You're on fire!</div>
+            </div>
+            <a routerLink="/jobs" class="wb-btn">
+              🔍 Browse New Jobs
+            </a>
+          </div>
+  
+          <!-- ── OVERVIEW TAB ── -->
+          <ng-container *ngIf="activeTab === 'overview'">
+  
+            <!-- Stats grid -->
+            <div class="stats-grid">
+              <div class="stat-card" *ngFor="let s of stats">
+                <div class="sc-icon">{{ s.icon }}</div>
+                <div class="sc-value">{{ s.value }}</div>
+                <div class="sc-label">{{ s.label }}</div>
+                <div class="sc-change" [class.positive]="s.up" [class.neutral]="!s.up">
+                  {{ s.change }}
+                </div>
+              </div>
+            </div>
+  
+            <!-- Applications table preview -->
+            <div class="dash-card">
+              <div class="dc-header">
+                <h3 class="dc-title">Recent Applications</h3>
+                <button class="dc-link" (click)="setTab('applications')">View all →</button>
+              </div>
+              <div class="app-table-wrap">
+                <table class="app-table">
+                  <thead>
+                    <tr>
+                      <th>Position</th>
+                      <th>Company</th>
+                      <th>Applied</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let app of applications.slice(0, 5); trackBy: trackById">
+                      <td class="td-title">{{ app.title }}</td>
+                      <td>
+                        <div class="td-company">
+                          <div class="td-logo" [style.background]="app.logoColor">{{ app.logo }}</div>
+                          {{ app.company }}
+                        </div>
+                      </td>
+                      <td class="td-date">{{ app.appliedDate }}</td>
+                      <td>
+                        <span class="app-status" [ngClass]="statusClass(app.status)">
+                          {{ statusLabel(app.status) }}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          class="tbl-action-btn"
+                          [class.tbl-action-primary]="app.status === 'interview' || app.status === 'offer'"
+                        >
+                          {{ app.status === 'interview' ? 'Prepare' : app.status === 'offer' ? 'View Offer' : 'View' }}
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+  
+            <!-- Two-col: activity + recommendations -->
+            <div class="two-col">
+  
+              <!-- Activity feed -->
+              <div class="dash-card">
+                <div class="dc-header">
+                  <h3 class="dc-title">Recent Activity</h3>
+                </div>
+                <div class="activity-list">
+                  <div class="act-item" *ngFor="let a of activity">
+                    <div class="act-icon-wrap" [style.background]="a.color + '18'" [style.color]="a.color">
+                      {{ a.icon }}
+                    </div>
+                    <div class="act-body">
+                      <div class="act-text">{{ a.text }}</div>
+                      <div class="act-time">{{ a.time }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+  
+              <!-- Recommended jobs -->
+              <div class="dash-card">
+                <div class="dc-header">
+                  <h3 class="dc-title">Recommended for You</h3>
+                </div>
+                <div class="reco-list">
+                  <a
+                    *ngFor="let job of savedJobs.slice(0, 4); trackBy: trackById"
+                    routerLink="/jobs"
+                    class="reco-item"
+                  >
+                    <div class="reco-logo" [style.background]="job.logoColor">{{ job.logo }}</div>
+                    <div class="reco-info">
+                      <div class="reco-title">{{ job.title }}</div>
+                      <div class="reco-meta">{{ job.company }} · {{ job.salary }}</div>
+                      <div class="reco-match">{{ job.matchScore }}% match</div>
+                    </div>
+                    <button class="reco-apply" (click)="$event.preventDefault()">Apply →</button>
+                  </a>
+                </div>
+              </div>
+  
+            </div>
+          </ng-container>
+  
+          <!-- ── APPLICATIONS TAB ── -->
+          <ng-container *ngIf="activeTab === 'applications'">
+            <div class="dash-card" style="margin-top:0">
+              <div class="dc-header">
+                <h3 class="dc-title">All Applications ({{ applications.length }})</h3>
+                <div class="dc-filters">
+                  <span class="dc-filter active">All</span>
+                  <span class="dc-filter">Active</span>
+                  <span class="dc-filter">Interviews</span>
+                  <span class="dc-filter">Closed</span>
+                </div>
+              </div>
+              <div class="app-table-wrap">
+                <table class="app-table">
+                  <thead>
+                    <tr>
+                      <th>Position</th>
+                      <th>Company</th>
+                      <th>Type</th>
+                      <th>Salary</th>
+                      <th>Applied</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let app of applications; trackBy: trackById">
+                      <td class="td-title">{{ app.title }}</td>
+                      <td>
+                        <div class="td-company">
+                          <div class="td-logo" [style.background]="app.logoColor">{{ app.logo }}</div>
+                          {{ app.company }}
+                        </div>
+                      </td>
+                      <td class="td-type">{{ app.type }}</td>
+                      <td class="td-salary">{{ app.salary }}</td>
+                      <td class="td-date">{{ app.appliedDate }}</td>
+                      <td>
+                        <span class="app-status" [ngClass]="statusClass(app.status)">
+                          {{ statusLabel(app.status) }}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          class="tbl-action-btn"
+                          [class.tbl-action-primary]="app.status === 'interview' || app.status === 'offer'"
+                        >
+                          {{ app.status === 'interview' ? 'Prepare' : app.status === 'offer' ? 'View Offer' : app.status === 'rejected' ? 'Find Similar' : 'View' }}
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </ng-container>
+  
+          <!-- ── SAVED JOBS TAB ── -->
+          <ng-container *ngIf="activeTab === 'saved'">
+            <div class="dash-card" style="margin-top:0" *ngIf="savedJobs.length > 0">
+              <div class="dc-header">
+                <h3 class="dc-title">Saved Jobs ({{ savedJobs.length }})</h3>
+              </div>
+              <div class="saved-grid">
+                <div class="saved-card" *ngFor="let job of savedJobs; trackBy: trackById">
+                  <div class="saved-card-top">
+                    <div class="sc-logo" [style.background]="job.logoColor">{{ job.logo }}</div>
+                    <div class="sc-info">
+                      <div class="sc-title">{{ job.title }}</div>
+                      <div class="sc-company">{{ job.company }}</div>
+                    </div>
+                    <button class="sc-remove" (click)="removeSaved(job.id)" aria-label="Remove">✕</button>
+                  </div>
+  
+                  <div class="sc-tags">
+                    <span *ngFor="let tag of job.tags.slice(0, 2)" class="sc-tag">{{ tag }}</span>
+                    <span class="sc-salary-tag">{{ job.salary }}</span>
+                  </div>
+  
+                  <div class="sc-match-row">
+                    <div class="sc-match-bar-wrap">
+                      <div class="sc-match-bar">
+                        <div class="sc-match-fill" [style.width]="job.matchScore + '%'"></div>
+                      </div>
+                    </div>
+                    <span class="sc-match-pct">{{ job.matchScore }}%</span>
+                  </div>
+  
+                  <div class="sc-footer">
+                    <span class="sc-saved-date">Saved {{ job.savedDate }}</span>
+                    <a routerLink="/jobs" class="sc-apply-btn">Apply Now →</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            <div class="empty-state" *ngIf="savedJobs.length === 0">
+              <div class="es-icon">🔖</div>
+              <h3>No saved jobs yet</h3>
+              <p>Browse jobs and tap the bookmark icon to save them here for later.</p>
+              <a routerLink="/jobs" class="es-btn">Browse Jobs</a>
+            </div>
+          </ng-container>
+  
+          <!-- ── MESSAGES TAB ── -->
+          <ng-container *ngIf="activeTab === 'messages'">
+            <div class="messages-layout">
+  
+              <!-- Thread list -->
+              <div class="msg-list">
+                <div class="ml-header">
+                  <h3>Messages</h3>
+                  <span class="ml-count" *ngIf="totalUnread > 0">{{ totalUnread }} new</span>
+                </div>
+  
+                <div
+                  *ngFor="let msg of messages; trackBy: trackById"
+                  class="msg-thread-item"
+                  [class.active]="activeMessageId === msg.id"
+                  (click)="setActiveMessage(msg.id)"
+                >
+                  <div class="mti-av" [style.background]="msg.logoColor">{{ msg.logo }}</div>
+                  <div class="mti-body">
+                    <div class="mti-header">
+                      <span class="mti-name">{{ msg.from }}</span>
+                      <span class="mti-time">{{ msg.time }}</span>
+                    </div>
+                    <div class="mti-company">{{ msg.company }}</div>
+                    <div class="mti-preview">{{ msg.preview }}</div>
+                  </div>
+                  <div class="mti-unread" *ngIf="msg.unread > 0">{{ msg.unread }}</div>
+                </div>
+              </div>
+  
+              <!-- Active thread -->
+              <div class="msg-thread" *ngIf="activeMessage">
+  
+                <!-- Thread header -->
+                <div class="mt-header">
+                  <div class="mt-av" [style.background]="activeMessage.logoColor">
+                    {{ activeMessage.logo }}
+                  </div>
+                  <div class="mt-info">
+                    <div class="mt-name">{{ activeMessage.from }}</div>
+                    <div class="mt-status">
+                      <span class="mt-online-dot" [class.online]="activeMessage.online"></span>
+                      {{ activeMessage.online ? 'Online now' : 'Offline' }} · {{ activeMessage.company }}
+                    </div>
+                  </div>
+                  <div class="mt-actions">
+                    <button class="mt-action-btn" title="Video call">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polygon points="23 7 16 12 23 17 23 7"/>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                      </svg>
+                    </button>
+                    <button class="mt-action-btn" title="More options">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+  
+                <!-- Messages body -->
+                <div class="msg-thread-body">
+                  <div
+                    *ngFor="let bubble of activeMessage.thread"
+                    class="msg-bubble-wrap"
+                    [class.me]="bubble.sender === 'me'"
+                  >
+                    <div class="msg-bubble" [class.bubble-me]="bubble.sender === 'me'" [class.bubble-them]="bubble.sender === 'them'">
+                      {{ bubble.text }}
+                    </div>
+                    <div class="bubble-time">{{ bubble.time }}</div>
+                  </div>
+                </div>
+  
+                <!-- Input bar -->
+                <div class="msg-input-bar">
+                  <input
+                    type="text"
+                    [(ngModel)]="messageInput"
+                    placeholder="Type a message…"
+                    class="msg-input"
+                    (keydown.enter)="sendMessage()"
+                  />
+                  <button class="msg-send-btn" (click)="sendMessage()" [disabled]="!messageInput.trim()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+  
+            </div>
+          </ng-container>
+  
+        </main>
+      </div>
+    </div>
+  </div>
