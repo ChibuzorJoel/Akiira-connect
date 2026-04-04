@@ -39,6 +39,9 @@ import { OnboardingComponent } from './pages/onboarding/onboarding.component';
 import { TalentComponent } from './pages/talent/talent.component';
 import { PricingComponent } from './pages/pricing/pricing.component';
 import { CompanyOnboardingComponent } from './pages/company-onboarding/company-onboarding.component';
+import { EmployerDashboardComponent } from './pages/employer-dashboard/employer-dashboard.component';
+import { EmployerProfileComponent } from './pages/employer-profile/employer-profile.component';
+import { MessagesComponent } from './pages/messages/messages.component';
 
 
 @NgModule({
@@ -64,7 +67,10 @@ import { CompanyOnboardingComponent } from './pages/company-onboarding/company-o
     OnboardingComponent,
     TalentComponent,
     PricingComponent,
-    CompanyOnboardingComponent
+    CompanyOnboardingComponent,
+    EmployerDashboardComponent,
+    EmployerProfileComponent,
+    MessagesComponent
     
   ],
   imports: [

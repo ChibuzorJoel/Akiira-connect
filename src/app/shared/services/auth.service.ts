@@ -1,244 +1,203 @@
-
+// src/app/shared/services/auth.service.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// KEY FIX: mockLogin now looks up the user in the registry first so that
+// employers always come back as employers and freelancers as freelancers.
+// ─────────────────────────────────────────────────────────────────────────────
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { tap, catchError, map } from 'rxjs/operators';
+import { delay } from 'rxjs/operators';
 
 export interface AuthUser {
-  id: string;
-  fullName: string;
-  email: string;
-  role: 'freelancer' | 'employer';
-  token: string;
-  expiresAt: number;
+  fullName:     string;
+  email:        string;
+  role:         'freelancer' | 'employer';
+  companyName?: string;
+  token:        string;
+  expiresAt:    number;
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-}
-
-export interface RegisterData {
-  fullName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  role: 'freelancer' | 'employer';
-  agreeToTerms: boolean;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  user?: AuthUser;
-  token?: string;
-  message?: string;
-}
+// ─── Storage keys ────────────────────────────────────────────────────────────
+const SESSION_KEY  = 'akiira_user';
+const TOKEN_KEY    = 'akiira_token';
+const REGISTRY_KEY = 'akiira_user_registry';   // email → AuthUser map
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private readonly API       = 'http://localhost:3000/api/auth';
-  private readonly TOKEN_KEY = 'akiira_token';
-  private readonly USER_KEY  = 'akiira_user';
+  private _user$ = new BehaviorSubject<AuthUser | null>(this._loadSession());
+  readonly user$ = this._user$.asObservable();
 
-  // Load user synchronously on startup so guards work immediately
-  private userSubject = new BehaviorSubject<AuthUser | null>(this.loadUser());
-
-  readonly user$       = this.userSubject.asObservable();
-  readonly isLoggedIn$ = this.user$.pipe(map(u => !!u));
-
-  get currentUser(): AuthUser | null { return this.userSubject.value; }
-
-  // This is what authGuard checks — reads from BehaviorSubject, always synchronous
-  get isLoggedIn(): boolean { return !!this.userSubject.value; }
-
-  get token(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY) || sessionStorage.getItem(this.TOKEN_KEY);
+  get isLoggedIn():  boolean         { return !!this._user$.value; }
+  get currentUser(): AuthUser | null { return this._user$.value; }
+  get token():       string | null {
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
   }
 
-  constructor(private http: HttpClient, private router: Router) {
-    // Debug: log what we found on startup
-    const user = this.loadUser();
-    if (user) {
-      console.log('[AuthService] Session restored for:', user.fullName);
-    } else {
-      console.log('[AuthService] No session found');
-    }
+  constructor(private router: Router) {}
+
+  // ─── MOCK LOGIN ──────────────────────────────────────────────────────────
+  // Looks up the email in the registry so the stored role is preserved.
+  // If the email has never been registered a demo freelancer session is created.
+  mockLogin(creds: { email: string; password: string; rememberMe?: boolean }): Observable<AuthUser> {
+    return new Observable(obs => {
+      setTimeout(() => {
+        if (!creds.email || creds.password.length < 6) {
+          obs.error('Invalid email or password.');
+          return;
+        }
+
+        // ── Try to find a previously registered user ─────────────────────
+        const stored = this._findInRegistry(creds.email);
+
+        const user: AuthUser = stored
+          ? { ...stored, token: 'mock_' + Date.now(), expiresAt: Date.now() + 30 * 864e5 }
+          : {
+              // Fallback for demo logins that were never registered
+              fullName:  this._nameFromEmail(creds.email),
+              email:     creds.email,
+              role:      'freelancer',         // default for unknown emails
+              token:     'mock_' + Date.now(),
+              expiresAt: Date.now() + 30 * 864e5,
+            };
+
+        this._persistSession(user, creds.rememberMe ?? false);
+        obs.next(user);
+        obs.complete();
+      }, 900);
+    });
   }
 
-  // ── Real API calls ───────────────────────────────────────────
-  login(creds: LoginCredentials): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(this.API + '/login', creds).pipe(
-      tap(res => { if (res.success && res.user) { this.persistSession(res.user, creds.rememberMe); } }),
-      catchError(err => throwError(() => err.error?.message || 'Login failed.'))
-    );
+  // ─── MOCK REGISTER ───────────────────────────────────────────────────────
+  mockRegister(payload: {
+    fullName?:       string;
+    email:           string;
+    password:        string;
+    confirmPassword: string;
+    role:            'freelancer' | 'employer';
+    agreeToTerms:    boolean;
+    companyName?:    string;
+    companySize?:    string;
+    industry?:       string;
+  }): Observable<AuthUser> {
+
+    return new Observable(obs => {
+      setTimeout(() => {
+        // Block duplicate emails
+        if (this._findInRegistry(payload.email)) {
+          obs.error('An account with this email already exists.');
+          return;
+        }
+
+        const user: AuthUser = {
+          fullName:    payload.fullName || this._nameFromEmail(payload.email),
+          email:       payload.email,
+          role:        payload.role,              // ← preserved exactly
+          companyName: payload.companyName,
+          token:       'mock_' + Date.now(),
+          expiresAt:   Date.now() + 30 * 864e5,
+        };
+
+        // Save to registry so future logins restore the correct role
+        this._saveToRegistry(user);
+
+        // Create active session
+        this._persistSession(user, false);
+        obs.next(user);
+        obs.complete();
+      }, 900);
+    });
   }
 
-  register(data: RegisterData): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(this.API + '/register', data).pipe(
-      tap(res => { if (res.success && res.user) { this.persistSession(res.user, false); } }),
-      catchError(err => throwError(() => err.error?.message || 'Registration failed.'))
-    );
+  // ─── GOOGLE (mock) ────────────────────────────────────────────────────────
+  loginWithGoogle(): void {
+    const user: AuthUser = {
+      fullName:  'Google User',
+      email:     'user@gmail.com',
+      role:      'freelancer',
+      token:     'google_' + Date.now(),
+      expiresAt: Date.now() + 30 * 864e5,
+    };
+    this._persistSession(user, true);
+    this.router.navigate(['/onboarding']);
   }
 
-  forgotPassword(email: string): Observable<{ success: boolean; message: string }> {
-    return this.http
-      .post<{ success: boolean; message: string }>(this.API + '/forgot-password', { email })
-      .pipe(catchError(err => throwError(() => err.error?.message || 'Failed.')));
+  // ─── PASSWORD RESET (mock) ────────────────────────────────────────────────
+  forgotPassword(email: string): Observable<void> {
+    if (!email.includes('@')) return throwError(() => 'Enter a valid email.').pipe(delay(600));
+    return new Observable(obs => { setTimeout(() => { obs.next(); obs.complete(); }, 1000); });
   }
 
-  verifyOtp(email: string, otp: string): Observable<{ success: boolean; resetToken: string }> {
-    return this.http
-      .post<{ success: boolean; resetToken: string }>(this.API + '/verify-otp', { email, otp })
-      .pipe(catchError(err => throwError(() => err.error?.message || 'Invalid code.')));
+  verifyOtp(email: string, otp: string): Observable<void> {
+    if (otp === '000000' || otp.length < 4)
+      return throwError(() => 'Invalid or incorrect code.').pipe(delay(600));
+    return new Observable(obs => { setTimeout(() => { obs.next(); obs.complete(); }, 800); });
   }
 
-  resetPassword(email: string, otp: string, newPassword: string): Observable<{ success: boolean }> {
-    return this.http
-      .post<{ success: boolean }>(this.API + '/reset-password', { email, otp, newPassword })
-      .pipe(catchError(err => throwError(() => err.error?.message || 'Reset failed.')));
+  resetPassword(email: string, newPw: string): Observable<void> {
+    if (newPw.length < 8)
+      return throwError(() => 'Password must be at least 8 characters.').pipe(delay(600));
+    return new Observable(obs => { setTimeout(() => { obs.next(); obs.complete(); }, 900); });
   }
 
+  // ─── LOGOUT ───────────────────────────────────────────────────────────────
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    sessionStorage.removeItem(this.TOKEN_KEY);
-    sessionStorage.removeItem(this.USER_KEY);
-    this.userSubject.next(null);
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    this._user$.next(null);
     this.router.navigate(['/auth/login']);
   }
 
-  loginWithGoogle(): void {
-    window.location.href = this.API + '/google';
+  // ─── PRIVATE HELPERS ─────────────────────────────────────────────────────
+  private _persistSession(user: AuthUser, remember: boolean): void {
+    const json = JSON.stringify(user);
+    localStorage.setItem(SESSION_KEY, json);
+    localStorage.setItem(TOKEN_KEY, user.token);
+    if (remember) {
+      sessionStorage.setItem(SESSION_KEY, json);
+      sessionStorage.setItem(TOKEN_KEY, user.token);
+    }
+    this._user$.next(user);
   }
 
-  // ── Mock methods (development — no backend needed) ───────────
-  mockLogin(creds: LoginCredentials): Observable<AuthResponse> {
-    const svc = this;
-    return new Observable(observer => {
-      setTimeout(() => {
-        if (creds.email && creds.password.length >= 6) {
-          const user: AuthUser = {
-            id:        'usr_' + Math.random().toString(36).slice(2),
-            fullName:  'Chibuzor Joel',
-            email:     creds.email,
-            role:      'freelancer',
-            token:     'mock_' + Date.now(),
-            expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
-          };
-          svc.persistSession(user, creds.rememberMe);
-          observer.next({ success: true, user });
-          observer.complete();
-        } else {
-          observer.error('Invalid email or password.');
-        }
-      }, 1200);
-    });
-  }
-
-  mockRegister(data: RegisterData): Observable<AuthResponse> {
-    const svc = this;
-    return new Observable(observer => {
-      setTimeout(() => {
-        if (data.email && data.password === data.confirmPassword) {
-          const user: AuthUser = {
-            id:        'usr_' + Math.random().toString(36).slice(2),
-            fullName:  data.fullName,
-            email:     data.email,
-            role:      data.role,
-            token:     'mock_' + Date.now(),
-            expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-          };
-          svc.persistSession(user, false);
-          observer.next({ success: true, user });
-          observer.complete();
-        } else {
-          observer.error('Registration failed. Please check your details.');
-        }
-      }, 1400);
-    });
-  }
-
-  mockForgotPassword(email: string): Observable<{ success: boolean; message: string }> {
-    return new Observable(observer => {
-      setTimeout(() => {
-        if (email && email.includes('@')) {
-          observer.next({ success: true, message: 'Code sent to ' + email });
-          observer.complete();
-        } else {
-          observer.error('Please enter a valid email address.');
-        }
-      }, 1400);
-    });
-  }
-
-  mockVerifyOtp(email: string, otp: string): Observable<{ success: boolean; resetToken: string }> {
-    return new Observable(observer => {
-      setTimeout(() => {
-        if (otp === '000000') {
-          observer.error('Incorrect code.');
-        } else if (otp.length === 6) {
-          observer.next({ success: true, resetToken: 'mock_reset_' + Date.now() });
-          observer.complete();
-        } else {
-          observer.error('Enter the complete 6-digit code.');
-        }
-      }, 1200);
-    });
-  }
-
-  mockResetPassword(email: string, otp: string, newPassword: string): Observable<{ success: boolean }> {
-    return new Observable(observer => {
-      setTimeout(() => {
-        if (newPassword && newPassword.length >= 8) {
-          observer.next({ success: true });
-          observer.complete();
-        } else {
-          observer.error('Password must be at least 8 characters.');
-        }
-      }, 1400);
-    });
-  }
-
-  // ── Private helpers ──────────────────────────────────────────
-  persistSession(user: AuthUser, remember: boolean): void {
-    // Always save to localStorage so session survives page refresh
-    localStorage.setItem(this.TOKEN_KEY, user.token);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-
-    // Also save to sessionStorage as backup
-    sessionStorage.setItem(this.TOKEN_KEY, user.token);
-    sessionStorage.setItem(this.USER_KEY, JSON.stringify(user));
-
-    this.userSubject.next(user);
-  }
-
-  private loadUser(): AuthUser | null {
+  private _loadSession(): AuthUser | null {
     try {
-      // Check localStorage first, then sessionStorage
-      const raw = localStorage.getItem(this.USER_KEY)
-                  || sessionStorage.getItem(this.USER_KEY);
-
-      if (!raw) { return null; }
-
-      const user: AuthUser = JSON.parse(raw);
-
-      // Check token expiry
-      if (user.expiresAt && Date.now() > user.expiresAt) {
-        console.log('[AuthService] Session expired, clearing.');
-        localStorage.removeItem(this.USER_KEY);
-        localStorage.removeItem(this.TOKEN_KEY);
-        sessionStorage.removeItem(this.USER_KEY);
-        sessionStorage.removeItem(this.TOKEN_KEY);
+      const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const u: AuthUser = JSON.parse(raw);
+      if (u.expiresAt && Date.now() > u.expiresAt) {
+        this.logout();
         return null;
       }
+      return u;
+    } catch { return null; }
+  }
 
-      return user;
-    } catch (e) {
-      console.error('[AuthService] Error loading user:', e);
-      return null;
-    }
+  // User registry — persists registered accounts by email
+  private _findInRegistry(email: string): AuthUser | null {
+    try {
+      const reg: Record<string, AuthUser> = JSON.parse(
+        localStorage.getItem(REGISTRY_KEY) || '{}'
+      );
+      return reg[email.toLowerCase()] || null;
+    } catch { return null; }
+  }
+
+  private _saveToRegistry(user: AuthUser): void {
+    try {
+      const reg: Record<string, AuthUser> = JSON.parse(
+        localStorage.getItem(REGISTRY_KEY) || '{}'
+      );
+      reg[user.email.toLowerCase()] = user;
+      localStorage.setItem(REGISTRY_KEY, JSON.stringify(reg));
+    } catch {}
+  }
+
+  private _nameFromEmail(email: string): string {
+    return email.split('@')[0]
+      .replace(/[._\-]/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
   }
 }

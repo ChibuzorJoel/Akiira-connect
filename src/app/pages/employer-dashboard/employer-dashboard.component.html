@@ -1,0 +1,348 @@
+<!-- src/app/pages/employer-dashboard/employer-dashboard.component.html -->
+<div class="ed-page">
+
+    <!-- ── Page Header ── -->
+    <div class="ed-header">
+      <div class="ed-container">
+        <div class="edh-left">
+          <div class="edh-company-av">{{ companyInitials }}</div>
+          <div>
+            <div class="edh-eyebrow">Employer Dashboard</div>
+            <h1 class="edh-title">{{ companyName }}</h1>
+            <div class="edh-meta">
+              <span class="edh-status">
+                <span class="edh-status-dot"></span> Actively Hiring
+              </span>
+              <span class="edh-sep">·</span>
+              <span>{{ companyProfile?.industry || 'Technology' }}</span>
+              <span class="edh-sep">·</span>
+              <span>{{ companyProfile?.location || 'Remote-first' }}</span>
+            </div>
+          </div>
+        </div>
+  
+        <div class="edh-actions">
+          <button class="edh-btn-secondary" (click)="goProfile()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Company Profile
+          </button>
+          <button class="edh-btn-primary" (click)="goPostJob()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Post a Job
+          </button>
+        </div>
+      </div>
+  
+      <!-- Tabs -->
+      <div class="ed-container">
+        <div class="edh-tabs">
+          <button
+            *ngFor="let tab of tabs"
+            class="edh-tab"
+            [class.active]="activeTab === tab.id"
+            (click)="setTab(tab.id)"
+          >
+            <span>{{ tab.icon }}</span>
+            {{ tab.label }}
+            <span class="edh-tab-badge" *ngIf="tab.id === 'applicants' && totalNewApps > 0">{{ totalNewApps }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- ── Content ── -->
+    <div class="ed-container ed-body">
+  
+      <!-- ════ OVERVIEW TAB ════ -->
+      <div *ngIf="activeTab === 'overview'" class="ed-panel">
+  
+        <!-- Stats grid -->
+        <div class="stats-grid">
+          <div *ngFor="let s of stats" class="stat-card">
+            <div class="sc-icon">{{ s.icon }}</div>
+            <div class="sc-value" [style.color]="s.color">{{ s.value }}</div>
+            <div class="sc-label">{{ s.label }}</div>
+            <div class="sc-delta">{{ s.delta }}</div>
+          </div>
+        </div>
+  
+        <div class="overview-cols">
+  
+          <!-- Active jobs mini-list -->
+          <div class="ov-card">
+            <div class="ov-card-head">
+              <h3 class="ov-card-title">Active Jobs</h3>
+              <button class="ov-link" (click)="setTab('jobs')">View all →</button>
+            </div>
+            <div class="mini-job-list">
+              <div *ngFor="let j of jobPostings.slice(0,3); trackBy: trackById" class="mini-job-row">
+                <div class="mjr-info">
+                  <div class="mjr-title">{{ j.title }}</div>
+                  <div class="mjr-meta">{{ j.type }} · {{ j.postedAt }}</div>
+                </div>
+                <div class="mjr-right">
+                  <div class="mjr-apps">
+                    <strong>{{ j.applicants }}</strong>
+                    <span *ngIf="j.newApps > 0" class="mjr-new">+{{ j.newApps }} new</span>
+                  </div>
+                  <div class="mjr-status-dot" [style.background]="jobStatusColor(j.status)"></div>
+                </div>
+              </div>
+            </div>
+            <button class="ov-card-cta" (click)="goPostJob()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Post a New Job
+            </button>
+          </div>
+  
+          <!-- Recent applicants -->
+          <div class="ov-card">
+            <div class="ov-card-head">
+              <h3 class="ov-card-title">Recent Applicants</h3>
+              <button class="ov-link" (click)="setTab('applicants')">View all →</button>
+            </div>
+            <div class="mini-app-list">
+              <div *ngFor="let a of applicants.slice(0,4); trackBy: trackById" class="mini-app-row">
+                <div class="mar-av" [style.background]="a.avatarColor">{{ a.initials }}</div>
+                <div class="mar-info">
+                  <div class="mar-name">{{ a.name }}</div>
+                  <div class="mar-role">{{ a.role }}</div>
+                </div>
+                <div class="mar-right">
+                  <div class="mar-match">{{ a.matchScore }}%</div>
+                  <span class="mar-status" [style.background]="statusColor(a.status) + '18'" [style.color]="statusColor(a.status)">{{ statusLabel(a.status) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Activity feed -->
+          <div class="ov-card">
+            <div class="ov-card-head">
+              <h3 class="ov-card-title">Activity Feed</h3>
+            </div>
+            <div class="activity-list">
+              <div *ngFor="let a of activityFeed" class="activity-item">
+                <div class="ai-icon">{{ a.icon }}</div>
+                <div class="ai-body">
+                  <div class="ai-text">{{ a.text }}</div>
+                  <div class="ai-time">{{ a.time }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+        </div>
+  
+        <!-- Browse talent CTA -->
+        <div class="talent-cta">
+          <div class="tc-bg"></div>
+          <div class="tc-inner">
+            <div class="tc-left">
+              <div class="tc-icon">👥</div>
+              <div>
+                <div class="tc-title">Need to source candidates directly?</div>
+                <div class="tc-sub">Browse 320,000+ freelancers by skill, rate, and availability. Message anyone directly.</div>
+              </div>
+            </div>
+            <button class="tc-btn" (click)="goTalent()">Browse Talent →</button>
+          </div>
+        </div>
+  
+      </div>
+  
+      <!-- ════ MY JOBS TAB ════ -->
+      <div *ngIf="activeTab === 'jobs'" class="ed-panel">
+        <div class="panel-head">
+          <h2 class="panel-title">My Job Postings</h2>
+          <button class="edh-btn-primary" (click)="goPostJob()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Post New Job
+          </button>
+        </div>
+  
+        <div class="jobs-table">
+          <div class="jt-head">
+            <span>Job Title</span>
+            <span>Salary</span>
+            <span>Applicants</span>
+            <span>Views</span>
+            <span>Status</span>
+            <span>Actions</span>
+          </div>
+          <div *ngFor="let j of jobPostings; trackBy: trackById" class="jt-row">
+            <div class="jtr-title">
+              <div class="jtr-name">{{ j.title }}</div>
+              <div class="jtr-meta">{{ j.type }} · {{ j.location }} · {{ j.postedAt }}</div>
+            </div>
+            <div class="jtr-salary">{{ j.salary }}</div>
+            <div class="jtr-apps">
+              <strong>{{ j.applicants }}</strong>
+              <span class="jtr-new-badge" *ngIf="j.newApps > 0">+{{ j.newApps }}</span>
+            </div>
+            <div class="jtr-views">{{ j.views | number }}</div>
+            <div class="jtr-status">
+              <span class="status-pill"
+                [style.background]="jobStatusColor(j.status) + '18'"
+                [style.color]="jobStatusColor(j.status)"
+                [style.border-color]="jobStatusColor(j.status) + '30'"
+              >
+                <span class="sp-dot" [style.background]="jobStatusColor(j.status)"></span>
+                {{ j.status | titlecase }}
+              </span>
+            </div>
+            <div class="jtr-actions">
+              <button class="jtra-btn" title="Edit">✏️</button>
+              <button class="jtra-btn" title="Pause/Resume">{{ j.status === 'active' ? '⏸' : '▶️' }}</button>
+              <button class="jtra-btn jtra-danger" title="Close">🗑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- ════ APPLICANTS TAB ════ -->
+      <div *ngIf="activeTab === 'applicants'" class="ed-panel">
+        <div class="panel-head">
+          <h2 class="panel-title">All Applicants <span class="panel-count">{{ applicants.length }}</span></h2>
+          <div class="filter-chips">
+            <button *ngFor="let f of ['all','new','reviewed','interview','offer','rejected']"
+              class="filter-chip"
+              [class.active]="filterStatus === f"
+              (click)="setFilter(f)"
+            >{{ f === 'all' ? 'All' : statusLabel(f) }}</button>
+          </div>
+        </div>
+  
+        <div class="applicants-grid">
+          <div *ngFor="let a of filteredApplicants; trackBy: trackById" class="applicant-card">
+            <div class="apc-top">
+              <div class="apc-av" [style.background]="a.avatarColor">{{ a.initials }}</div>
+              <div class="apc-info">
+                <div class="apc-name">{{ a.name }}</div>
+                <div class="apc-role">{{ a.role }}</div>
+                <div class="apc-loc">📍 {{ a.location }}</div>
+              </div>
+              <div class="apc-match">
+                <div class="apc-match-num">{{ a.matchScore }}%</div>
+                <div class="apc-match-lbl">match</div>
+              </div>
+            </div>
+  
+            <div class="apc-skills">
+              <span *ngFor="let s of a.skills" class="apc-skill">{{ s }}</span>
+            </div>
+  
+            <div class="apc-footer">
+              <span class="apc-status"
+                [style.background]="statusColor(a.status) + '15'"
+                [style.color]="statusColor(a.status)"
+                [style.border-color]="statusColor(a.status) + '25'"
+              >{{ statusLabel(a.status) }}</span>
+              <span class="apc-time">{{ a.appliedAt }}</span>
+              <div class="apc-actions">
+                <button class="apc-btn apc-btn-primary">View Profile</button>
+                <button class="apc-btn">Message</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- ════ ANALYTICS TAB ════ -->
+      <div *ngIf="activeTab === 'analytics'" class="ed-panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Hiring Analytics</h2>
+          <span class="panel-sub">Last 30 days</span>
+        </div>
+  
+        <div class="analytics-grid">
+  
+          <!-- Funnel -->
+          <div class="analytics-card">
+            <h3 class="ac-title">Application Funnel</h3>
+            <div class="funnel">
+              <div class="funnel-step" *ngFor="let s of [
+                {label:'Total Views',     value:3211, pct:100, color:'#0c0c0e'},
+                {label:'Clicked Apply',   value:642,  pct:20,  color:'#d97706'},
+                {label:'Applications',    value:128,  pct:4,   color:'#d97706'},
+                {label:'Reviewed',        value:64,   pct:2,   color:'#d97706'},
+                {label:'Interviews',      value:12,   pct:0.4, color:'#16a34a'},
+                {label:'Offers',          value:2,    pct:0.06,color:'#16a34a'}
+              ]">
+                <div class="fs-label">{{ s.label }}</div>
+                <div class="fs-bar-wrap">
+                  <div class="fs-bar" [style.width]="s.pct + '%'" [style.background]="s.color"></div>
+                </div>
+                <div class="fs-val">{{ s.value | number }}</div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Top performing jobs -->
+          <div class="analytics-card">
+            <h3 class="ac-title">Top Performing Jobs</h3>
+            <div class="perf-list">
+              <div *ngFor="let j of jobPostings; trackBy: trackById" class="perf-row">
+                <div class="pr-info">
+                  <div class="pr-title">{{ j.title }}</div>
+                  <div class="pr-meta">{{ j.applicants }} applicants · {{ j.views | number }} views</div>
+                </div>
+                <div class="pr-bar-wrap">
+                  <div class="pr-bar" [style.width]="(j.applicants / 50 * 100) + '%'"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Source breakdown -->
+          <div class="analytics-card">
+            <h3 class="ac-title">Applicant Locations</h3>
+            <div class="source-list">
+              <div *ngFor="let s of [
+                {country:'Nigeria',    pct:32, count:41},
+                {country:'India',      pct:24, count:31},
+                {country:'UK',         pct:14, count:18},
+                {country:'Brazil',     pct:10, count:13},
+                {country:'Ghana',      pct:8,  count:10},
+                {country:'Other',      pct:12, count:15}
+              ]" class="source-row">
+                <div class="sr-country">{{ s.country }}</div>
+                <div class="sr-bar-wrap">
+                  <div class="sr-bar" [style.width]="s.pct + '%'"></div>
+                </div>
+                <div class="sr-pct">{{ s.pct }}%</div>
+                <div class="sr-count">{{ s.count }}</div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Time to hire -->
+          <div class="analytics-card">
+            <h3 class="ac-title">Hiring Speed</h3>
+            <div class="speed-stats">
+              <div class="ss-item">
+                <div class="ss-value">4.2 days</div>
+                <div class="ss-label">Avg. time to first response</div>
+              </div>
+              <div class="ss-item">
+                <div class="ss-value">11 days</div>
+                <div class="ss-label">Avg. time to interview</div>
+              </div>
+              <div class="ss-item">
+                <div class="ss-value">22 days</div>
+                <div class="ss-label">Avg. time to hire</div>
+              </div>
+              <div class="ss-item ss-item-highlight">
+                <div class="ss-value">🏆 Top 15%</div>
+                <div class="ss-label">Faster than 85% of companies</div>
+              </div>
+            </div>
+          </div>
+  
+        </div>
+      </div>
+  
+    </div>
+  </div>

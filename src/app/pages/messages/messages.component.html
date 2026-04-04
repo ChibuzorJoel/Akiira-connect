@@ -1,0 +1,169 @@
+<!-- src/app/pages/messages/messages.component.html -->
+<div class="msg-page">
+
+    <!-- Sidebar: conversation list -->
+    <aside class="msg-sidebar">
+      <div class="mss-header">
+        <h2 class="mss-title">Messages
+          <span class="mss-unread" *ngIf="totalUnread > 0">{{ totalUnread }}</span>
+        </h2>
+        <button class="mss-compose">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+      </div>
+  
+      <div class="mss-search">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Search conversations…"/>
+      </div>
+  
+      <div class="conv-list">
+        <div
+          *ngFor="let c of filteredConvs"
+          class="conv-item"
+          [class.active]="activeConvId === c.id"
+          (click)="selectConv(c.id)"
+        >
+          <div class="ci-av-wrap">
+            <div class="ci-av" [style.background]="c.avatarColor">{{ c.initials }}</div>
+            <span class="ci-online" *ngIf="c.online"></span>
+          </div>
+          <div class="ci-info">
+            <div class="ci-top">
+              <span class="ci-name">{{ c.name }}</span>
+              <span class="ci-time">{{ c.lastTime }}</span>
+            </div>
+            <div class="ci-role">{{ c.role }}</div>
+            <div class="ci-preview">{{ c.lastMessage }}</div>
+          </div>
+          <div class="ci-badge" *ngIf="c.unread > 0">{{ c.unread }}</div>
+        </div>
+  
+        <div class="conv-empty" *ngIf="filteredConvs.length === 0">
+          <div>💬</div>
+          <p>No conversations found</p>
+        </div>
+      </div>
+    </aside>
+  
+    <!-- Main chat area -->
+    <main class="msg-main" *ngIf="activeConv">
+  
+      <!-- Chat header -->
+      <div class="mmc-header">
+        <div class="mmc-av" [style.background]="activeConv.avatarColor">{{ activeConv.initials }}</div>
+        <div class="mmc-info">
+          <div class="mmc-name">
+            {{ activeConv.name }}
+            <span class="mmc-online-badge" *ngIf="activeConv.online">● Online</span>
+          </div>
+          <div class="mmc-role">
+            {{ activeConv.role }}
+            <span *ngIf="activeConv.jobTitle"> · Applied for <strong>{{ activeConv.jobTitle }}</strong></span>
+          </div>
+        </div>
+        <div class="mmc-actions">
+          <button class="mmc-action-btn" title="View profile">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </button>
+          <button class="mmc-action-btn" title="Schedule interview">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+  
+      <!-- Job context bar -->
+      <div class="job-context-bar" *ngIf="activeConv.jobTitle && isEmployer">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        Applied for: <strong>{{ activeConv.jobTitle }}</strong>
+        <button class="jcb-btn">View Application →</button>
+      </div>
+  
+      <!-- Messages -->
+      <div class="msg-scroll">
+        <div class="msg-list">
+          <div
+            *ngFor="let m of activeMessages"
+            class="msg-bubble-wrap"
+            [class.msg-mine]="m.sender === 'me'"
+          >
+            <!-- Avatar for "them" -->
+            <div class="mb-av" *ngIf="m.sender === 'them'"
+              [style.background]="activeConv.avatarColor">
+              {{ activeConv.initials }}
+            </div>
+  
+            <div class="msg-bubble" [class.msg-bubble-mine]="m.sender === 'me'">
+              {{ m.text }}
+              <div class="mb-time">{{ m.time }}</div>
+            </div>
+  
+            <!-- Avatar for "me" -->
+            <div class="mb-av mb-av-me" *ngIf="m.sender === 'me'">
+              {{ getUserInitials() }}
+            </div>
+          </div>
+  
+          <!-- Typing indicator placeholder -->
+          <div class="typing-indicator" *ngIf="activeConv.online">
+            <div class="ti-av" [style.background]="activeConv.avatarColor">{{ activeConv.initials }}</div>
+            <div class="ti-dots">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+  
+          <div #msgEnd></div>
+        </div>
+      </div>
+  
+      <!-- Input bar -->
+      <div class="msg-input-bar">
+        <div class="mib-inner">
+          <button class="mib-attach-btn" title="Attach file">
+            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </button>
+          <textarea
+            class="mib-input"
+            [(ngModel)]="newMessage"
+            (keydown)="onKey($event)"
+            placeholder="Type a message… (Enter to send)"
+            rows="1"
+          ></textarea>
+          <button
+            class="mib-send-btn"
+            (click)="sendMessage()"
+            [disabled]="!newMessage.trim()"
+          >
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="mib-hint">Enter to send · Shift+Enter for new line</div>
+      </div>
+  
+    </main>
+  
+    <!-- Empty state when no conv selected -->
+    <div class="msg-empty-state" *ngIf="!activeConv">
+      <div class="mes-icon">💬</div>
+      <h3>Select a conversation</h3>
+      <p>Choose from your messages on the left to start chatting.</p>
+    </div>
+  </div>

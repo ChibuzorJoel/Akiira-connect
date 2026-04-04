@@ -12,7 +12,7 @@ import {
   strongPasswordValidator,
   passwordMatchValidator,
   getPasswordStrength,
-} from '../../../shared/validators/auth-validators';
+} from '../../../shared/validators/auth.validators';
 
 @Component({
   selector: 'app-register',
@@ -73,12 +73,19 @@ export class RegisterComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Already logged in → redirect to correct place
     if (this.auth.isLoggedIn) {
-      const ob = localStorage.getItem('akiira_onboarded');
-      this.router.navigate([ob ? '/dashboard' : '/onboarding']);
+      const onboarded = localStorage.getItem('akiira_onboarded');
+      const role      = this.auth.currentUser?.role;
+      if (!onboarded) {
+        this.router.navigate([role === 'employer' ? '/company-onboarding' : '/onboarding']);
+      } else {
+        this.router.navigate([role === 'employer' ? '/employer-dashboard' : '/dashboard']);
+      }
       return;
     }
 
+    // ── Freelancer form ──────────────────────────────────────
     this.fForm = this.fb.group({
       fullName:        ['', [Validators.required, Validators.minLength(2)]],
       email:           ['', [Validators.required, Validators.email]],
@@ -87,6 +94,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       agreeToTerms:    [false, Validators.requiredTrue],
     });
 
+    // ── Employer / company form ──────────────────────────────
     this.eForm = this.fb.group({
       companyName:     ['', [Validators.required, Validators.minLength(2)]],
       contactName:     ['', [Validators.required, Validators.minLength(2)]],
@@ -125,40 +133,58 @@ export class RegisterComponent implements OnInit, OnDestroy {
     return 'Invalid';
   }
 
+  // ── FREELANCER SUBMIT ────────────────────────────────────────
+  // Registers → saves role as 'freelancer' → navigates to /onboarding
   submitFreelancer(): void {
     this.fForm.markAllAsTouched();
     if (this.fForm.invalid || this.isLoading) { this.cdr.markForCheck(); return; }
+
     this.isLoading = true; this.serverError = ''; this.cdr.markForCheck();
-    this.auth.mockRegister({ ...this.fForm.value, role: 'freelancer' as const }).pipe(
+
+    this.auth.mockRegister({
+      ...this.fForm.value,
+      role: 'freelancer' as const,
+    }).pipe(
       takeUntil(this.destroy$),
       finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
     ).subscribe({
-      next:  () => this.router.navigate(['/onboarding']),
+      next:  () => this.router.navigate(['/onboarding']),       // ← freelancer wizard
       error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
     });
   }
 
+  // ── EMPLOYER SUBMIT ──────────────────────────────────────────
+  // Registers → saves role as 'employer' → navigates to /company-onboarding
   submitEmployer(): void {
     this.eForm.markAllAsTouched();
     if (this.eForm.invalid || this.isLoading) { this.cdr.markForCheck(); return; }
+
     this.isLoading = true; this.serverError = ''; this.cdr.markForCheck();
+
     const ev = this.eForm.value;
+
     this.auth.mockRegister({
-      fullName: ev.contactName, email: ev.workEmail,
-      password: ev.password,    confirmPassword: ev.confirmPassword,
-      role: 'employer' as const, agreeToTerms: ev.agreeToTerms,
+      fullName:        ev.contactName,
+      email:           ev.workEmail,
+      password:        ev.password,
+      confirmPassword: ev.confirmPassword,
+      role:            'employer' as const,          // ← role stored in registry
+      agreeToTerms:    ev.agreeToTerms,
+      companyName:     ev.companyName,
+      companySize:     ev.companySize,
+      industry:        ev.industry,
     }).pipe(
       takeUntil(this.destroy$),
       finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
     ).subscribe({
       next: () => {
-        // Store company info for the onboarding wizard
+        // Stash company info for the wizard to pre-fill
         localStorage.setItem('akiira_company_reg', JSON.stringify({
           companyName: ev.companyName,
           companySize: ev.companySize,
           industry:    ev.industry,
         }));
-        this.router.navigate(['/company-onboarding']);
+        this.router.navigate(['/company-onboarding']);           // ← employer wizard
       },
       error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
     });

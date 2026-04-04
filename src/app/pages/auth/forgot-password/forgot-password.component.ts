@@ -16,7 +16,7 @@ import { AuthService }   from '../../../shared/services/auth.service';
 import {
   strongPasswordValidator,
   passwordMatchValidator
-} from '../../../shared/validators/auth-validators';
+} from '../../../shared/validators/auth.validators';
 
 export type ForgotStep = 'email' | 'otp' | 'reset' | 'success';
 
