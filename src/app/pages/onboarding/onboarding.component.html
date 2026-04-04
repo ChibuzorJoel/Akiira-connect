@@ -1,0 +1,437 @@
+<!-- src/app/pages/onboarding/onboarding.component.html -->
+<div class="ob-page">
+
+    <!-- Background -->
+    <div class="ob-bg" aria-hidden="true">
+      <div class="ob-orb ob-orb-1"></div>
+      <div class="ob-orb ob-orb-2"></div>
+      <div class="ob-grid"></div>
+    </div>
+  
+    <!-- Toast -->
+    <div class="ob-toast" [class.show]="saveSuccess" role="alert">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ saveSuccess }}
+    </div>
+  
+    <div class="ob-wrap">
+  
+      <!-- ── Left panel ── -->
+      <div class="ob-left" aria-hidden="true">
+  
+        <a routerLink="/" class="ob-logo">
+          <div class="ob-logo-mark">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <path d="M10 1L2 5.5V14.5L10 19L18 14.5V5.5L10 1Z" fill="#0c0c0e" opacity=".82"/>
+              <path d="M10 5.5L5.5 8.5V14L10 17L14.5 14V8.5L10 5.5Z" fill="#0c0c0e"/>
+            </svg>
+          </div>
+          <span class="ob-logo-name">Akiira<strong>Connect</strong></span>
+        </a>
+  
+        <div class="ob-left-content">
+          <div class="ob-welcome">
+            <h2 class="ob-welcome-title">
+                Welcome, {{ firstName }}! 👋
+            </h2>
+            <p class="ob-welcome-sub">
+              Let's set up your profile so employers can find and hire you. Takes about 3 minutes.
+            </p>
+          </div>
+  
+          <!-- Step list -->
+          <div class="ob-step-list">
+            <div
+              *ngFor="let s of stepMeta"
+              class="ob-step-item"
+              [class.osl-active]="currentStep === s.n"
+              [class.osl-done]="currentStep > s.n"
+            >
+              <div class="osl-circle">
+                <svg *ngIf="currentStep > s.n" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span *ngIf="currentStep <= s.n">{{ s.icon }}</span>
+              </div>
+              <div class="osl-text">
+                <div class="osl-title">{{ s.title }}</div>
+                <div class="osl-sub">{{ s.sub }}</div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Benefits reminder -->
+          <div class="ob-benefits">
+            <div class="obb-item"><span>🎯</span> 92% match rate with complete profiles</div>
+            <div class="obb-item"><span>📩</span> 3× more recruiter messages</div>
+            <div class="obb-item"><span>⚡</span> Apply to jobs in 1 click</div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- ── Right panel: form ── -->
+      <main class="ob-right">
+  
+        <!-- Mobile logo -->
+        <a routerLink="/" class="ob-logo ob-logo-mobile">
+          <div class="ob-logo-mark ob-logo-mark-dark">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <path d="M10 1L2 5.5V14.5L10 19L18 14.5V5.5L10 1Z" fill="#0c0c0e" opacity=".82"/>
+              <path d="M10 5.5L5.5 8.5V14L10 17L14.5 14V8.5L10 5.5Z" fill="#0c0c0e"/>
+            </svg>
+          </div>
+          <span class="ob-logo-name ob-logo-name-dark">Akiira<strong>Connect</strong></span>
+        </a>
+  
+        <!-- Progress bar -->
+        <div class="ob-progress-wrap">
+          <div class="ob-progress-bar">
+            <div class="ob-progress-fill" [style.width]="progress + '%'"></div>
+          </div>
+          <span class="ob-progress-text">Step {{ currentStep }} of {{ totalSteps }}</span>
+        </div>
+  
+        <!-- Step heading -->
+        <div class="ob-step-head">
+          <div class="ob-step-icon">{{ step.icon }}</div>
+          <div>
+            <h1 class="ob-step-title">{{ step.title }}</h1>
+            <p class="ob-step-sub">{{ step.sub }}</p>
+          </div>
+        </div>
+  
+        <!-- ════ STEP 1: Identity ════ -->
+        <form *ngIf="currentStep === 1" [formGroup]="step1" novalidate class="ob-form">
+  
+          <div class="form-row" [class.fe]="isInvalid(step1, 'fullName')">
+            <label class="form-label">Full name *</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+              </span>
+              <input class="form-input" formControlName="fullName" type="text" placeholder="e.g. Chibuzor Joel" autocomplete="name"/>
+            </div>
+            <span class="form-err" *ngIf="isInvalid(step1, 'fullName')">Please enter your full name</span>
+          </div>
+  
+          <div class="form-row" [class.fe]="isInvalid(step1, 'headline')">
+            <label class="form-label">
+              Professional headline *
+              <span class="form-hint-inline">One line that sums up what you do</span>
+            </label>
+            <input class="form-input" formControlName="headline" type="text"
+              placeholder="e.g. Senior Angular Developer · TypeScript · Remote"/>
+            <div class="form-row-foot">
+              <span class="form-err" *ngIf="isInvalid(step1, 'headline')">Headline is required (min 10 chars)</span>
+              <span class="form-count">{{ step1.get('headline')?.value?.length || 0 }}/100</span>
+            </div>
+          </div>
+  
+          <div class="form-grid-2">
+            <div class="form-row" [class.fe]="isInvalid(step1, 'location')">
+              <label class="form-label">Location *</label>
+              <div class="input-wrap">
+                <span class="input-icon">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </span>
+                <input class="form-input" formControlName="location" type="text" placeholder="e.g. Lagos, Nigeria"/>
+              </div>
+              <span class="form-err" *ngIf="isInvalid(step1, 'location')">Please add your location</span>
+            </div>
+  
+            <div class="form-row">
+              <label class="form-label">Phone <span class="form-hint-inline">Optional</span></label>
+              <div class="input-wrap">
+                <span class="input-icon">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.18 6.18l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.92 16.92z"/>
+                  </svg>
+                </span>
+                <input class="form-input" formControlName="phone" type="tel" placeholder="+234 800 000 0000"/>
+              </div>
+            </div>
+          </div>
+  
+        </form>
+  
+        <!-- ════ STEP 2: About ════ -->
+        <form *ngIf="currentStep === 2" [formGroup]="step2" novalidate class="ob-form">
+  
+          <div class="form-row" [class.fe]="isInvalid(step2, 'bio')">
+            <label class="form-label">
+              About you *
+              <span class="form-hint-inline">Min. 80 characters · Be specific — who you are, what you build, your superpower</span>
+            </label>
+            <textarea
+              class="form-textarea"
+              formControlName="bio"
+              rows="8"
+              placeholder="I'm a full-stack developer with 5+ years building scalable SaaS products. I specialise in Angular and Node.js and love working with remote-first teams that care about code quality.
+  
+  I've shipped 10+ production apps, led frontend rewrites for two Series B startups, and reduced load times by 60% using lazy-loading and caching strategies.
+  
+  When I'm not coding, I contribute to open source and mentor junior devs in my community."
+            ></textarea>
+            <div class="form-row-foot">
+              <span class="form-err" *ngIf="isInvalid(step2, 'bio')">
+                {{ bioLength < 80 ? 'At least 80 characters needed (' + (80 - bioLength) + ' more)' : 'Bio is required' }}
+              </span>
+              <span class="form-count" [class.form-count-warn]="bioLength < 80">{{ bioLength }}/600</span>
+            </div>
+          </div>
+  
+          <div class="bio-tips">
+            <div class="bt-title">✨ Tips for a great bio</div>
+            <div class="bt-list">
+              <div class="bt-item">
+                <span class="bt-check" [class.done]="bioLength >= 80">{{ bioLength >= 80 ? '✓' : '○' }}</span>
+                At least 80 characters
+              </div>
+              <div class="bt-item">
+                <span class="bt-check" [class.done]="bioLength >= 200">{{ bioLength >= 200 ? '✓' : '○' }}</span>
+                Mention your key technologies
+              </div>
+              <div class="bt-item">
+                <span class="bt-check" [class.done]="step2.get('bio')?.value?.includes('year')">{{ step2.get('bio')?.value?.includes('year') ? '✓' : '○' }}</span>
+                Include years of experience
+              </div>
+              <div class="bt-item">
+                <span class="bt-check" [class.done]="bioLength >= 300">{{ bioLength >= 300 ? '✓' : '○' }}</span>
+                Share a specific achievement
+              </div>
+            </div>
+          </div>
+  
+        </form>
+  
+        <!-- ════ STEP 3: Work preferences ════ -->
+        <form *ngIf="currentStep === 3" [formGroup]="step3" novalidate class="ob-form">
+  
+          <!-- Availability -->
+          <div class="form-row">
+            <label class="form-label">Availability *</label>
+            <div class="avail-options">
+              <label
+                *ngFor="let a of availabilityOpts"
+                class="avail-opt"
+                [class.selected]="step3.get('availability')?.value === a.value"
+              >
+                <input type="radio" formControlName="availability" [value]="a.value"/>
+                <span class="ao-dot" [style.background]="a.color"></span>
+                <span>{{ a.label }}</span>
+              </label>
+            </div>
+          </div>
+  
+          <!-- Category + Hourly rate -->
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label class="form-label">Primary category *</label>
+              <select class="form-select" formControlName="category">
+                <option *ngFor="let c of categoryOptions" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+  
+            <div class="form-row" [class.fe]="isInvalid(step3, 'hourlyRate')">
+              <label class="form-label">Expected hourly rate (USD) *</label>
+              <div class="rate-wrap">
+                <span class="rate-prefix">$</span>
+                <input class="form-input rate-input" formControlName="hourlyRate" type="number" min="5" placeholder="65"/>
+                <span class="rate-suffix">/hr</span>
+              </div>
+              <span class="form-err" *ngIf="isInvalid(step3, 'hourlyRate')">Please enter your hourly rate</span>
+            </div>
+          </div>
+  
+          <!-- Job types -->
+          <div class="form-row">
+            <label class="form-label">Job types you're open to</label>
+            <div class="job-type-row">
+              <button
+                *ngFor="let t of jobTypeOptions"
+                type="button"
+                class="jt-chip"
+                [class.selected]="selectedJobTypes.includes(t)"
+                (click)="toggleJobType(t)"
+              >{{ t }}</button>
+            </div>
+          </div>
+  
+          <!-- Remote only -->
+          <div class="form-row">
+            <label class="toggle-row">
+              <div class="toggle-switch">
+                <input type="checkbox" formControlName="remoteOnly"/>
+                <span class="ts-slider"></span>
+              </div>
+              <div>
+                <div class="tr-label">Remote only</div>
+                <div class="tr-desc">Only show me fully remote positions</div>
+              </div>
+            </label>
+          </div>
+  
+        </form>
+  
+        <!-- ════ STEP 4: Links ════ -->
+        <form *ngIf="currentStep === 4" [formGroup]="step4" novalidate class="ob-form">
+  
+          <div class="links-note">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            All links are optional, but profiles with GitHub see 3× more recruiter messages.
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#24292f"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+              GitHub
+            </label>
+            <div class="input-wrap">
+              <span class="input-prefix">github.com/</span>
+              <input class="form-input input-with-prefix" formControlName="github" type="text" placeholder="yourhandle"/>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#0052cc"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              LinkedIn
+            </label>
+            <div class="input-wrap">
+              <span class="input-prefix">linkedin.com/in/</span>
+              <input class="form-input input-with-prefix" formControlName="linkedin" type="text" placeholder="yourname"/>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">
+              🌐 Personal website / portfolio
+            </label>
+            <div class="input-wrap">
+              <span class="input-prefix">https://</span>
+              <input class="form-input input-with-prefix" formControlName="website" type="text" placeholder="yoursite.dev"/>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#1d9bf0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              Twitter / X
+            </label>
+            <div class="input-wrap">
+              <span class="input-prefix">twitter.com/</span>
+              <input class="form-input input-with-prefix" formControlName="twitter" type="text" placeholder="yourhandle"/>
+            </div>
+          </div>
+  
+        </form>
+  
+        <!-- ════ STEP 5: Skills ════ -->
+        <div *ngIf="currentStep === 5" class="ob-form">
+  
+          <!-- Current skills -->
+          <div class="form-row">
+            <label class="form-label">
+              Your skills
+              <span class="form-hint-inline">{{ skills.length }}/20 added</span>
+            </label>
+  
+            <div class="skills-wrap" [class.skills-empty]="skills.length === 0">
+              <ng-container *ngIf="skills.length === 0">
+                <span class="skills-placeholder">Add your skills below or tap the suggestions →</span>
+              </ng-container>
+              <span *ngFor="let s of skills" class="skill-chip">
+                {{ s }}
+                <button class="skill-rm" (click)="removeSkill(s)" type="button" [attr.aria-label]="'Remove ' + s">×</button>
+              </span>
+            </div>
+  
+            <!-- Add custom skill -->
+            <div class="skill-add-row">
+              <input
+                class="form-input"
+                type="text"
+                [(ngModel)]="newSkill"
+                (keydown)="onSkillKey($event)"
+                placeholder="Type a skill and press Enter…"
+                maxlength="40"
+              />
+              <button class="skill-add-btn" type="button" (click)="addSkill()" [disabled]="!newSkill.trim()">
+                + Add
+              </button>
+            </div>
+          </div>
+  
+          <!-- Popular suggestions -->
+          <div class="form-row">
+            <label class="form-label">Popular skills — tap to add</label>
+            <div class="suggestions-wrap">
+              <button
+                *ngFor="let s of popularSkills"
+                type="button"
+                class="suggestion-chip"
+                [class.suggestion-added]="hasSkill(s)"
+                (click)="hasSkill(s) ? removeSkill(s) : addSkill(s)"
+              >
+                <span *ngIf="hasSkill(s)">✓ </span>{{ s }}
+              </button>
+            </div>
+          </div>
+  
+          <!-- Validation hint -->
+          <div class="skills-required" *ngIf="skills.length === 0">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Add at least one skill to continue
+          </div>
+  
+        </div>
+  
+        <!-- ── Navigation ── -->
+        <div class="ob-nav">
+          <button class="ob-skip" type="button" (click)="skip()">
+            Skip for now
+          </button>
+  
+          <div class="ob-nav-right">
+            <button class="ob-btn-back" type="button" *ngIf="currentStep > 1" (click)="prev()">
+              ← Back
+            </button>
+  
+            <button
+              class="ob-btn-next"
+              type="button"
+              *ngIf="currentStep < totalSteps"
+              (click)="next()"
+            >
+              Continue →
+            </button>
+  
+            <button
+              class="ob-btn-finish"
+              type="button"
+              *ngIf="currentStep === totalSteps"
+              (click)="complete()"
+              [disabled]="saving"
+            >
+              <span *ngIf="!saving">
+                🚀 Complete Profile
+              </span>
+              <span class="ob-spinner-wrap" *ngIf="saving">
+                <span class="ob-spinner"></span>
+                Saving…
+              </span>
+            </button>
+          </div>
+        </div>
+  
+      </main>
+    </div>
+  </div>

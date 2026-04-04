@@ -1,0 +1,316 @@
+<!-- src/app/pages/job-detail/job-detail.component.html -->
+<div class="jd-page" *ngIf="job">
+
+    <!-- Apply Modal -->
+    <div class="apply-overlay" [class.open]="showApplyModal" (click)="closeApply()">
+      <div class="apply-modal" (click)="$event.stopPropagation()">
+  
+        <!-- Step 1: Review profile -->
+        <div class="apply-step" *ngIf="applyStep === 1">
+          <div class="am-header">
+            <div class="am-logo" [style.background]="job.logoColor">{{ job.logo }}</div>
+            <div>
+              <h3 class="am-title">Apply to {{ job.company }}</h3>
+              <p class="am-sub">{{ job.title }}</p>
+            </div>
+            <button class="am-close" (click)="closeApply()">✕</button>
+          </div>
+  
+          <div class="am-profile-preview">
+            <div class="app-av">{{ userInitials }}</div>
+            <div>
+              <div class="app-name">{{ userName }}</div>
+              <div class="app-email">{{ userEmail }}</div>
+            </div>
+            <span class="app-ready">✓ Ready</span>
+          </div>
+  
+          <div class="am-checklist">
+            <div class="amc-item amc-done">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Profile attached
+            </div>
+            <div class="amc-item amc-done">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Contact info ready
+            </div>
+            <div class="amc-item">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              Cover letter (optional — next step)
+            </div>
+          </div>
+  
+          <div class="am-footer">
+            <button class="am-btn-ghost" (click)="closeApply()">Cancel</button>
+            <button class="am-btn-primary" (click)="nextStep()">
+              Continue
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        </div>
+  
+        <!-- Step 2: Cover letter -->
+        <div class="apply-step" *ngIf="applyStep === 2">
+          <div class="am-header">
+            <div class="am-logo" [style.background]="job.logoColor">{{ job.logo }}</div>
+            <div>
+              <h3 class="am-title">Cover Letter</h3>
+              <p class="am-sub">Optional — but recommended</p>
+            </div>
+            <button class="am-close" (click)="closeApply()">✕</button>
+          </div>
+  
+          <textarea
+            class="am-textarea"
+            [(ngModel)]="coverLetter"
+            rows="7"
+            placeholder="Hi {{job.company}} team,
+  
+  I'm excited to apply for the {{job.title}} role. I've been following {{job.company}}'s work and I believe my experience aligns perfectly with what you're looking for…"
+          ></textarea>
+  
+          <p class="am-hint">{{ coverLetter.length }} / 1000 characters</p>
+  
+          <div class="am-footer">
+            <button class="am-btn-ghost" (click)="applyStep = 1">Back</button>
+            <button class="am-btn-primary" (click)="submitApplication()" [disabled]="isApplying">
+              <span *ngIf="!isApplying">Submit Application</span>
+              <span class="am-spinner" *ngIf="isApplying">
+                <span class="spin"></span> Submitting…
+              </span>
+            </button>
+          </div>
+        </div>
+  
+        <!-- Step 3: Success -->
+        <div class="apply-step apply-success" *ngIf="applyStep === 3">
+          <div class="as-icon">🎉</div>
+          <h3 class="as-title">Application Sent!</h3>
+          <p class="as-sub">
+            Your application for <strong>{{ job.title }}</strong> at <strong>{{ job.company }}</strong> was submitted successfully.
+          </p>
+          <div class="as-info">
+            <div class="asi-item">⚡ Average response time: 18 hours</div>
+            <div class="asi-item">📧 Confirmation sent to {{ userEmail }}</div>
+          </div>
+          <button class="am-btn-primary" style="width:100%;margin-top:20px" (click)="closeApply()">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- ── Main content ── -->
+    <div class="jd-container">
+  
+      <!-- Breadcrumb -->
+      <div class="jd-breadcrumb">
+        <button class="jd-back" (click)="goBack()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Back to Jobs
+        </button>
+        <span class="jd-bc-sep">›</span>
+        <span class="jd-bc-current">{{ job.title }}</span>
+      </div>
+  
+      <div class="jd-layout">
+  
+        <!-- ── Left: Job detail ── -->
+        <article class="jd-main">
+  
+          <!-- Job header card -->
+          <div class="jd-header-card">
+            <div class="jdhc-top">
+              <div class="jdhc-logo" [style.background]="job.logoColor">{{ job.logo }}</div>
+              <div class="jdhc-info">
+                <div class="jdhc-company">
+                  {{ job.company }}
+                  <span class="jdhc-featured" *ngIf="job.featured">⭐ Featured</span>
+                </div>
+                <h1 class="jdhc-title">{{ job.title }}</h1>
+                <div class="jdhc-meta">
+                  <span>
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    {{ job.location }}
+                  </span>
+                  <span>
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                    {{ job.type }}
+                  </span>
+                  <span>
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Posted {{ job.postedAt }}
+                  </span>
+                  <span>{{ job.applicants }} applicants</span>
+                </div>
+              </div>
+  
+              <!-- Actions -->
+              <div class="jdhc-actions">
+                <button
+                  class="jdhc-save-btn"
+                  [class.saved]="isSaved"
+                  (click)="toggleSave()"
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                      [attr.fill]="isSaved ? 'currentColor' : 'none'"/>
+                  </svg>
+                  {{ isSaved ? 'Saved' : 'Save' }}
+                </button>
+                <button
+                  class="jdhc-apply-btn"
+                  (click)="openApply()"
+                  [class.applied]="hasApplied"
+                  [disabled]="hasApplied"
+                >
+                  {{ hasApplied ? '✓ Applied' : 'Quick Apply →' }}
+                </button>
+              </div>
+            </div>
+  
+            <!-- Salary + tags -->
+            <div class="jdhc-bottom">
+              <div class="jdhc-salary">{{ job.salary }}</div>
+              <div class="jdhc-tags">
+                <span *ngFor="let tag of job.tags" class="jdhc-tag">{{ tag }}</span>
+              </div>
+              <div class="jdhc-match" *ngIf="job.matchScore">
+                <div class="jm-bar">
+                  <div class="jm-fill" [style.width]="job.matchScore + '%'"></div>
+                </div>
+                <span>{{ job.matchScore }}% match</span>
+              </div>
+            </div>
+          </div>
+  
+          <!-- About -->
+          <div class="jd-section">
+            <h2 class="jds-title">About this role</h2>
+            <p class="jds-body">{{ job.description }}</p>
+          </div>
+  
+          <!-- Responsibilities -->
+          <div class="jd-section">
+            <h2 class="jds-title">What you'll do</h2>
+            <ul class="jds-list">
+              <li *ngFor="let r of job.responsibilities">
+                <span class="jds-bullet">→</span>{{ r }}
+              </li>
+            </ul>
+          </div>
+  
+          <!-- Requirements -->
+          <div class="jd-section">
+            <h2 class="jds-title">What we're looking for</h2>
+            <ul class="jds-list">
+              <li *ngFor="let r of job.requirements">
+                <span class="jds-bullet">✓</span>{{ r }}
+              </li>
+            </ul>
+          </div>
+  
+          <!-- Nice to have -->
+          <div class="jd-section" *ngIf="job.niceToHave?.length">
+            <h2 class="jds-title">Nice to have</h2>
+            <ul class="jds-list">
+              <li *ngFor="let r of job.niceToHave">
+                <span class="jds-bullet jds-bullet-soft">◦</span>{{ r }}
+              </li>
+            </ul>
+          </div>
+  
+          <!-- Benefits -->
+          <div class="jd-section">
+            <h2 class="jds-title">Benefits & perks</h2>
+            <div class="jds-benefits">
+              <div *ngFor="let b of job.benefits" class="jds-benefit-chip">
+                ✦ {{ b }}
+              </div>
+            </div>
+          </div>
+  
+          <!-- Apply CTA -->
+          <div class="jd-apply-cta" *ngIf="!hasApplied">
+            <div>
+              <div class="jd-cta-title">Ready to apply?</div>
+              <div class="jd-cta-sub">Takes less than 2 minutes with your Akiira profile</div>
+            </div>
+            <button class="jdhc-apply-btn" (click)="openApply()">Quick Apply →</button>
+          </div>
+          <div class="jd-applied-banner" *ngIf="hasApplied">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Application submitted! The {{ job.company }} team will be in touch.
+          </div>
+  
+        </article>
+  
+        <!-- ── Right: Sidebar ── -->
+        <aside class="jd-sidebar">
+  
+          <!-- Company card -->
+          <div class="jds-card">
+            <div class="jdsc-logo" [style.background]="job.logoColor">{{ job.logo }}</div>
+            <h3 class="jdsc-name">{{ job.company }}</h3>
+            <div class="jdsc-meta">
+              <div class="jdscm-item">
+                <span class="jdscm-label">Category</span>
+                <span class="jdscm-val">{{ job.category }}</span>
+              </div>
+              <div class="jdscm-item">
+                <span class="jdscm-label">Job type</span>
+                <span class="jdscm-val">{{ job.type }}</span>
+              </div>
+              <div class="jdscm-item">
+                <span class="jdscm-label">Location</span>
+                <span class="jdscm-val">{{ job.location }}</span>
+              </div>
+              <div class="jdscm-item">
+                <span class="jdscm-label">Applicants</span>
+                <span class="jdscm-val">{{ job.applicants }}</span>
+              </div>
+            </div>
+            <button class="jds-apply-btn" (click)="openApply()" [disabled]="hasApplied">
+              {{ hasApplied ? '✓ Applied' : 'Apply Now →' }}
+            </button>
+          </div>
+  
+          <!-- Similar jobs -->
+          <div class="jds-card" *ngIf="similarJobs.length > 0">
+            <h3 class="jdsc-section-title">Similar Jobs</h3>
+            <div class="similar-list">
+              <div
+                *ngFor="let sj of similarJobs; trackBy: trackById"
+                class="similar-item"
+                (click)="viewJob(sj.id)"
+              >
+                <div class="si-logo" [style.background]="sj.logoColor">{{ sj.logo }}</div>
+                <div class="si-info">
+                  <div class="si-title">{{ sj.title }}</div>
+                  <div class="si-company">{{ sj.company }} · {{ sj.salary }}</div>
+                  <div class="si-match" *ngIf="sj.matchScore">{{ sj.matchScore }}% match</div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+        </aside>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Not found -->
+  <div class="jd-not-found" *ngIf="!job">
+    <div class="jnf-icon">🔍</div>
+    <h2>Job not found</h2>
+    <p>This listing may have been removed or expired.</p>
+    <button class="jnf-btn" (click)="goBack()">Browse All Jobs</button>
+  </div>

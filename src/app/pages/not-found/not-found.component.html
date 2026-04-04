@@ -1,0 +1,97 @@
+<!-- src/app/pages/not-found/not-found.component.html -->
+<div class="nf-page">
+
+    <!-- Animated background -->
+    <div class="nf-bg" aria-hidden="true">
+      <div class="nf-orb nf-orb-1"></div>
+      <div class="nf-orb nf-orb-2"></div>
+      <div class="nf-orb nf-orb-3"></div>
+      <div class="nf-grid"></div>
+      <!-- Floating particles -->
+      <div class="nf-particle nf-p-1">💼</div>
+      <div class="nf-particle nf-p-2">🔍</div>
+      <div class="nf-particle nf-p-3">⚡</div>
+      <div class="nf-particle nf-p-4">🎯</div>
+      <div class="nf-particle nf-p-5">🚀</div>
+    </div>
+  
+    <!-- Content -->
+    <div class="nf-content">
+  
+      <!-- 404 big number -->
+      <div class="nf-code" aria-hidden="true">404</div>
+  
+      <!-- Icon -->
+      <div class="nf-icon-wrap">
+        <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+          <line x1="11" y1="8" x2="11" y2="11"/>
+          <line x1="11" y1="14" x2="11.01" y2="14"/>
+        </svg>
+      </div>
+  
+      <h1 class="nf-title">Page not found</h1>
+  
+      <p class="nf-sub">
+        The page you're looking for doesn't exist, was removed, or the link is broken.
+      </p>
+  
+      <!-- Countdown bar -->
+      <div class="nf-countdown">
+        <div class="nfc-text">
+          Redirecting to home in
+          <span class="nfc-num">{{ countdown }}</span>
+          second{{ countdown === 1 ? '' : 's' }}…
+        </div>
+        <div class="nfc-bar-wrap">
+          <div
+            class="nfc-bar"
+            [style.width]="((10 - countdown) / 10 * 100) + '%'"
+          ></div>
+        </div>
+      </div>
+  
+      <!-- Action buttons -->
+      <div class="nf-actions">
+        <button class="nf-btn-primary" (click)="goHome()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Go Home
+        </button>
+  
+        <button class="nf-btn-secondary" (click)="browseJobs()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          Browse Jobs
+        </button>
+  
+        <button class="nf-btn-ghost" (click)="goBack()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Go Back
+        </button>
+      </div>
+  
+      <!-- Quick links -->
+      <div class="nf-links">
+        <span class="nfl-label">Popular pages:</span>
+        <a routerLink="/"          class="nfl-link">Home</a>
+        <span class="nfl-sep">·</span>
+        <a routerLink="/jobs"      class="nfl-link">Find Jobs</a>
+        <span class="nfl-sep">·</span>
+        <a routerLink="/dashboard" class="nfl-link">Dashboard</a>
+        <span class="nfl-sep">·</span>
+        <a routerLink="/profile"   class="nfl-link">Profile</a>
+        <span class="nfl-sep">·</span>
+        <a routerLink="/settings"  class="nfl-link">Settings</a>
+      </div>
+  
+    </div>
+  </div>

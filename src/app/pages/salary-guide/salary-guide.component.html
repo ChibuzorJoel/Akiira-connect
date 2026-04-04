@@ -1,0 +1,115 @@
+<!-- src/app/pages/salary-guide/salary-guide.component.html -->
+<div class="sg-page">
+
+    <!-- Hero -->
+    <div class="sg-hero">
+      <div class="sgh-bg">
+        <div class="sgh-orb sgh-orb-1"></div>
+        <div class="sgh-orb sgh-orb-2"></div>
+        <div class="sgh-grid"></div>
+      </div>
+      <div class="sg-container">
+        <div class="sgh-eyebrow">2025 Remote Salary Guide</div>
+        <h1 class="sgh-title">Know your worth.<br><span class="sgh-accent">Negotiate with confidence.</span></h1>
+        <p class="sgh-sub">Real salary data for 22+ remote roles across engineering, design, data, and more. Updated quarterly.</p>
+  
+        <div class="sgh-search">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Search roles…"/>
+        </div>
+  
+        <!-- Top stat cards -->
+        <div class="sgh-stats">
+          <div class="sghs-card">
+            <div class="sghs-val">$155K</div>
+            <div class="sghs-label">Avg. Senior Engineer (remote)</div>
+          </div>
+          <div class="sghs-card">
+            <div class="sghs-val">+14%</div>
+            <div class="sghs-label">YoY salary growth (tech)</div>
+          </div>
+          <div class="sghs-card">
+            <div class="sghs-val">$195K</div>
+            <div class="sghs-label">Avg. ML Engineer (top 25%)</div>
+          </div>
+          <div class="sghs-card">
+            <div class="sghs-val">22+</div>
+            <div class="sghs-label">Roles covered this edition</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Main -->
+    <div class="sg-container sg-body">
+  
+      <!-- Category tabs -->
+      <div class="sg-cats">
+        <button
+          *ngFor="let c of categories"
+          class="sg-cat"
+          [class.active]="activeCategory === c"
+          (click)="setCategory(c)"
+        >{{ c }}</button>
+      </div>
+  
+      <!-- Table header legend -->
+      <div class="sg-legend">
+        <span>Role</span>
+        <span>Min</span>
+        <span>Median</span>
+        <span>Top 25%</span>
+        <span>YoY Growth</span>
+        <span>Demand</span>
+      </div>
+  
+      <!-- Salary rows -->
+      <div class="sg-rows">
+        <div *ngFor="let r of filtered" class="sg-row">
+          <div class="sgr-role">
+            <div class="sgr-title">{{ r.title }}</div>
+            <div class="sgr-cat">{{ r.category }}</div>
+          </div>
+  
+          <div class="sgr-salary-col">{{ formatK(r.min) }}</div>
+  
+          <div class="sgr-mid-col">
+            <div class="sgr-bar-wrap">
+              <div class="sgr-bar">
+                <div class="sgr-bar-fill"></div>
+                <div class="sgr-bar-mid" [style.left]="barWidth(r.mid, r)"></div>
+              </div>
+              <div class="sgr-mid-label">{{ formatK(r.mid) }}</div>
+            </div>
+          </div>
+  
+          <div class="sgr-salary-col sgr-max">{{ formatK(r.max) }}</div>
+  
+          <div class="sgr-yoy" [class.yoy-hot]="r.yoy >= 15">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="18 15 12 9 6 15"/>
+            </svg>
+            +{{ r.yoy }}%
+          </div>
+  
+          <div class="sgr-demand">
+            <span class="demand-badge" [style.background]="demandColor(r.demand) + '15'" [style.color]="demandColor(r.demand)" [style.border-color]="demandColor(r.demand) + '30'">
+              {{ r.demand }}
+            </span>
+          </div>
+        </div>
+  
+        <div class="sg-empty" *ngIf="filtered.length === 0">
+          <span>🔍</span> No roles found. Try a different search.
+        </div>
+      </div>
+  
+      <!-- Disclaimer -->
+      <p class="sg-disclaimer">
+        💡 Salary data aggregated from 12,000+ anonymised job offers and accepted offers on Akiira Connect (Jan–Mar 2025). Figures reflect USD annual compensation for fully-remote positions.
+      </p>
+  
+    </div>
+  </div>

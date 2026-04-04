@@ -1,130 +1,164 @@
 // src/app/layout/header/header.component.ts
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter, Subscription } from 'rxjs';
+import {
+  Component, OnInit, OnDestroy, HostListener,
+  ChangeDetectionStrategy, ChangeDetectorRef
+} from '@angular/core';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService, AuthUser } from '../../shared/services/auth.service';
 
 interface NavLink {
-  label: string;
-  route: string;
+  label:  string;
+  route:  string;
   exact?: boolean;
+  roles?: ('freelancer' | 'employer' | 'guest')[];  // who sees this link
 }
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.css'],
+  styleUrls:  ['./header.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent implements OnInit, OnDestroy {
 
-  isScrolled       = false;
+  isScrolled      = false;
+  isUserMenuOpen  = false;
   isMobileMenuOpen = false;
-  isUserMenuOpen   = false;
-  unreadMessages   = 3;
-  currentTime      = '';
-
-  // ── Real user from AuthService ──────────────────────────────
+  currentTime     = '';
+  unreadMessages  = 3;
   currentUser: AuthUser | null = null;
+  isLoggedIn      = false;
 
-  get isLoggedIn(): boolean {
-    return !!this.currentUser;
-  }
+  private subs    = new Subscription();
+  private ticker!: ReturnType<typeof setInterval>;
+  private clock!:  ReturnType<typeof setInterval>;
 
-  // First name only (e.g. "Chibuzor")
-  get userFirstName(): string {
-    if (!this.currentUser?.fullName) return '';
-    return this.currentUser.fullName.split(' ')[0];
-  }
+  // ── All possible nav links with role restrictions ──────────────────────
+  private readonly allNavLinks: NavLink[] = [
+    // Shared public link
+    { label: 'Home',          route: '/',             exact: true,  roles: ['guest'] },
 
-  // Initials (e.g. "CJ" from "Chibuzor Joel")
-  get userInitials(): string {
-    if (!this.currentUser?.fullName) return '?';
-    const parts = this.currentUser.fullName.trim().split(' ');
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-  }
+    // ── FREELANCER links ─────────────────────────────
+    { label: 'Find Jobs',     route: '/jobs',                       roles: ['freelancer'] },
+    { label: 'Companies',     route: '/companies',                  roles: ['freelancer'] },
+    { label: 'Salary Guide',  route: '/salary-guide',               roles: ['freelancer'] },
+    { label: 'Resources',     route: '/resources',                  roles: ['freelancer'] },
 
-  // Short display name for avatar button (e.g. "Chibuzor J.")
-  get userShortName(): string {
-    if (!this.currentUser?.fullName) return '';
-    const parts = this.currentUser.fullName.trim().split(' ');
-    if (parts.length === 1) return parts[0];
-    return parts[0] + ' ' + parts[parts.length - 1].charAt(0) + '.';
-  }
+    // ── EMPLOYER links ───────────────────────────────
+    { label: 'Post a Job',    route: '/post-job',                   roles: ['employer'] },
+    { label: 'Browse Talent', route: '/talent',                     roles: ['employer'] },
+    { label: 'Companies',     route: '/companies',                  roles: ['employer'] },
+    { label: 'Pricing',       route: '/pricing',                    roles: ['employer'] },
 
-  readonly navLinks: NavLink[] = [
-    { label: 'Find Jobs',  route: '/jobs'      },
-    { label: 'Companies',  route: '/companies'  },
-    { label: 'Dashboard',  route: '/dashboard'  },
-    { label: 'Resources',  route: '/resources'  },
+    // ── GUEST links ──────────────────────────────────
+    { label: 'Find Jobs',     route: '/jobs',                       roles: ['guest'] },
+    { label: 'Companies',     route: '/companies',                  roles: ['guest'] },
+    { label: 'Pricing',       route: '/pricing',                    roles: ['guest'] },
   ];
 
-  private subs = new Subscription();
-  private clockInterval!: ReturnType<typeof setInterval>;
+  // Computed based on current role
+  get navLinks(): NavLink[] {
+    const role = this.currentUser?.role;
+    const key  = !this.isLoggedIn ? 'guest' : (role === 'employer' ? 'employer' : 'freelancer');
+    return this.allNavLinks.filter(l => l.roles?.includes(key as any));
+  }
+
+  // ── User display helpers ───────────────────────────────────────────────
+  get userInitials(): string {
+    const name  = this.currentUser?.fullName || '';
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (!parts.length) return '?';
+    return parts.length === 1
+      ? parts[0][0].toUpperCase()
+      : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  get userShortName(): string {
+    return this.currentUser?.fullName?.split(' ')[0] || '';
+  }
+
+  get isEmployer(): boolean {
+    return this.currentUser?.role === 'employer';
+  }
+
+  get isFreelancer(): boolean {
+    return this.isLoggedIn && !this.isEmployer;
+  }
+
+  // ── Employer quick-stats from localStorage ─────────────────────────────
+  get companyName(): string {
+    try {
+      const p = JSON.parse(localStorage.getItem('akiira_company_profile') || '{}');
+      return p.companyName || this.currentUser?.fullName || '';
+    } catch { return ''; }
+  }
 
   constructor(
-    private router: Router,
     private auth:   AuthService,
+    private router: Router,
+    private cdr:    ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to real user state
+    // Subscribe to auth state
     this.subs.add(
       this.auth.user$.subscribe(user => {
         this.currentUser = user;
+        this.isLoggedIn  = !!user;
+        this.cdr.markForCheck();
       })
-    );
-
-    // Close menus on route change
-    this.subs.add(
-      this.router.events
-        .pipe(filter(e => e instanceof NavigationEnd))
-        .subscribe(() => {
-          this.isMobileMenuOpen = false;
-          this.isUserMenuOpen   = false;
-        })
     );
 
     // Live clock
     this.updateClock();
-    this.clockInterval = setInterval(() => {
-      this.updateClock();
-    }, 1000);
+    this.clock = setInterval(() => { this.updateClock(); this.cdr.markForCheck(); }, 60_000);
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
-    clearInterval(this.clockInterval);
+    clearInterval(this.clock);
   }
 
   private updateClock(): void {
-    this.currentTime = new Date().toLocaleTimeString('en-US', {
-      hour: '2-digit', minute: '2-digit',
-    });
+    const now  = new Date();
+    const h    = now.getHours().toString().padStart(2,'0');
+    const m    = now.getMinutes().toString().padStart(2,'0');
+    this.currentTime = `${h}:${m}`;
   }
 
   @HostListener('window:scroll')
   onScroll(): void {
-    this.isScrolled = window.scrollY > 8;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!(event.target as HTMLElement).closest('.user-menu-wrapper')) {
-      this.isUserMenuOpen = false;
+    const scrolled = window.scrollY > 20;
+    if (scrolled !== this.isScrolled) {
+      this.isScrolled = scrolled;
+      this.cdr.markForCheck();
     }
   }
 
-  toggleMobileMenu(): void { this.isMobileMenuOpen = !this.isMobileMenuOpen; }
-  toggleUserMenu():   void { this.isUserMenuOpen   = !this.isUserMenuOpen;   }
+  @HostListener('document:click', ['$event'])
+  onDocClick(e: MouseEvent): void {
+    if (this.isUserMenuOpen) {
+      const t = e.target as HTMLElement;
+      if (!t.closest('.user-menu-wrapper')) {
+        this.isUserMenuOpen = false;
+        this.cdr.markForCheck();
+      }
+    }
+  }
 
-  postJob():  void { this.router.navigate(['/post-job']);        }
-  signIn():   void { this.router.navigate(['/auth/login']);      }
-  signUp():   void { this.router.navigate(['/auth/register']);   }
+  toggleUserMenu():   void { this.isUserMenuOpen   = !this.isUserMenuOpen;   this.cdr.markForCheck(); }
+  toggleMobileMenu(): void { this.isMobileMenuOpen = !this.isMobileMenuOpen; this.cdr.markForCheck(); }
 
-  signOut():  void {
+  signIn():  void { this.router.navigate(['/auth/login']);    }
+  signUp():  void { this.router.navigate(['/auth/register']); }
+  postJob(): void { this.router.navigate(['/post-job']);       }
+  applyNow():void { this.router.navigate(['/jobs']);           }
+
+  signOut(): void {
+    this.auth.logout();
     this.isUserMenuOpen   = false;
     this.isMobileMenuOpen = false;
-    this.auth.logout(); // clears localStorage + redirects to /auth/login
+    this.cdr.markForCheck();
   }
 }

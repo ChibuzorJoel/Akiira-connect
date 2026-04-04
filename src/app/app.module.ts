@@ -26,6 +26,20 @@ import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-pas
 import { authInterceptor } from './shared/interceptors/auth.interceptor';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ProfileComponent } from './pages/profile/profile.component';
+import { JobsComponent } from './pages/jobs/jobs.component';
+import { JobDetailComponent } from './pages/job-detail/job-detail.component';
+import { SettingsComponent } from './pages/settings/settings.component';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { CompaniesComponent } from './pages/companies/companies.component';
+import { CompanyDetailComponent } from './pages/company-detail/company-detail.component';
+import { ResourcesComponent } from './pages/resources/resources.component';
+import { SalaryGuideComponent } from './pages/salary-guide/salary-guide.component';
+import { PostJobComponent } from './pages/post-job/post-job.component';
+import { OnboardingComponent } from './pages/onboarding/onboarding.component';
+import { TalentComponent } from './pages/talent/talent.component';
+import { PricingComponent } from './pages/pricing/pricing.component';
+import { CompanyOnboardingComponent } from './pages/company-onboarding/company-onboarding.component';
+
 
 @NgModule({
   declarations: [
@@ -37,7 +51,21 @@ import { ProfileComponent } from './pages/profile/profile.component';
     RegisterComponent,
     ForgotPasswordComponent,
     DashboardComponent,
+    JobsComponent,
+    JobDetailComponent,
+    SettingsComponent,
     ProfileComponent,
+    NotFoundComponent,
+    CompaniesComponent,
+    CompanyDetailComponent,
+    ResourcesComponent,
+    SalaryGuideComponent,
+    PostJobComponent,
+    OnboardingComponent,
+    TalentComponent,
+    PricingComponent,
+    CompanyOnboardingComponent
+    
   ],
   imports: [
     BrowserModule,

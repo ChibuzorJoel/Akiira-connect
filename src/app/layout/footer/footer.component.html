@@ -1,123 +1,97 @@
+<!-- src/app/layout/footer/footer.component.html -->
 <footer class="footer">
+  <div class="footer-container">
 
-    <!-- ── Top Wave Divider ── -->
-    <div class="footer-wave">
-      <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0,30 C360,60 1080,0 1440,30 L1440,0 L0,0 Z" fill="#f9fafb"/>
-      </svg>
-    </div>
-  
-    <div class="footer-inner">
-  
-      <!-- ── Brand + Newsletter ── -->
-      <div class="footer-brand-row">
-        <div class="footer-brand">
-          <a routerLink="/" class="footer-logo">
-            <div class="footer-logo-mark">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2L3 6.5V13.5L10 18L17 13.5V6.5L10 2Z" fill="white" opacity="0.9"/>
-                <path d="M10 6L6 8.5V13L10 15.5L14 13V8.5L10 6Z" fill="white"/>
-              </svg>
-            </div>
-            <span>Akira<strong>Connect</strong></span>
-          </a>
-          <p class="footer-tagline">
-            The leading platform connecting skilled freelancers with remote-first companies worldwide. Work from anywhere, grow your career.
-          </p>
-  
-          <!-- Trust badges -->
-          <div class="trust-badges">
-            <div class="trust-badge">
-              <span class="trust-icon">🌍</span>
-              <span>Global</span>
-            </div>
-            <div class="trust-badge">
-              <span class="trust-icon">🔒</span>
-              <span>Secure</span>
-            </div>
-            <div class="trust-badge">
-              <span class="trust-icon">⚡</span>
-              <span>Fast Hire</span>
-            </div>
+    <!-- ── Top row ── -->
+    <div class="footer-top">
+
+      <!-- Brand -->
+      <div class="footer-brand">
+        <a routerLink="/" class="fb-logo">
+          <div class="fb-logo-mark">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <path d="M10 1L2 5.5V14.5L10 19L18 14.5V5.5L10 1Z" fill="#0c0c0e" opacity=".82"/>
+              <path d="M10 5.5L5.5 8.5V14L10 17L14.5 14V8.5L10 5.5Z" fill="#0c0c0e"/>
+            </svg>
           </div>
-  
-          <!-- Social Links -->
-          <div class="social-links">
-            <a
-              *ngFor="let s of socialLinks"
-              [href]="s.href"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="social-link"
-              [attr.aria-label]="s.label"
-              [innerHTML]="s.icon"
-            ></a>
+          <span class="fb-name">Akiira<strong>Connect</strong></span>
+        </a>
+        <p class="fb-desc">
+          The world's sharpest remote job board.
+          Find freelance &amp; full-time roles from companies that respect your time.
+        </p>
+
+        <!-- Stats -->
+        <div class="fb-stats">
+          <div class="fb-stat" *ngFor="let s of stats">
+            <span class="fbs-value">{{ s.value }}</span>
+            <span class="fbs-label">{{ s.label }}</span>
           </div>
         </div>
-  
+
         <!-- Newsletter -->
-        <div class="newsletter-box">
-          <div class="newsletter-icon">📬</div>
-          <h4>Stay ahead of the market</h4>
-          <p>Get weekly curated remote jobs, salary insights, and career tips delivered to your inbox.</p>
-          <div class="newsletter-form">
-            <input type="email" placeholder="you@example.com" aria-label="Email for newsletter" />
-            <button type="button" class="btn-subscribe">Subscribe</button>
+        <div class="fb-newsletter" *ngIf="!subscribed">
+          <p class="fbn-label">Get weekly remote job picks:</p>
+          <div class="fbn-form">
+            <input
+              type="email"
+              [(ngModel)]="newsletterEmail"
+              placeholder="Enter your email"
+              class="fbn-input"
+              (keydown.enter)="subscribe()"
+            />
+            <button class="fbn-btn" (click)="subscribe()">Subscribe</button>
           </div>
-          <p class="newsletter-note">No spam. Unsubscribe anytime. 12,000+ freelancers subscribed.</p>
+        </div>
+        <div class="fb-subscribed" *ngIf="subscribed">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          You're in! Top remote jobs, every Monday.
+        </div>
+
+        <!-- Socials -->
+        <div class="fb-socials">
+          <a
+            *ngFor="let s of socials"
+            [href]="s.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="fb-social-btn"
+            [attr.aria-label]="s.label"
+            [innerHTML]="s.icon"
+          ></a>
         </div>
       </div>
-  
-      <!-- ── Link Columns ── -->
-      <div class="footer-links-grid">
-        <div class="footer-col" *ngFor="let section of sections">
-          <h5 class="footer-col-title">{{ section.title }}</h5>
-          <ul>
+
+      <!-- Link columns -->
+      <div class="footer-links">
+        <div class="fl-col" *ngFor="let section of sections">
+          <h4 class="fl-title">{{ section.title }}</h4>
+          <ul class="fl-list">
             <li *ngFor="let link of section.links">
-              <a [routerLink]="link.route" class="footer-link">{{ link.label }}</a>
+              <a [routerLink]="link.route" class="fl-link">{{ link.label }}</a>
             </li>
           </ul>
         </div>
       </div>
-  
-      <!-- ── Stats Bar ── -->
-      <div class="footer-stats">
-        <div class="footer-stat">
-          <strong>48,200+</strong>
-          <span>Remote Jobs</span>
-        </div>
-        <div class="footer-stat-divider"></div>
-        <div class="footer-stat">
-          <strong>12,500+</strong>
-          <span>Partner Companies</span>
-        </div>
-        <div class="footer-stat-divider"></div>
-        <div class="footer-stat">
-          <strong>320K+</strong>
-          <span>Freelancers Hired</span>
-        </div>
-        <div class="footer-stat-divider"></div>
-        <div class="footer-stat">
-          <strong>98%</strong>
-          <span>Satisfaction Rate</span>
-        </div>
-      </div>
-  
-      <!-- ── Bottom Bar ── -->
-      <div class="footer-bottom">
-        <div class="footer-copyright">
-          © {{ currentYear }} Akira Connect, Inc. All rights reserved.
-        </div>
-        <div class="footer-bottom-links">
-          <a routerLink="/privacy" class="footer-bottom-link">Privacy</a>
-          <a routerLink="/terms" class="footer-bottom-link">Terms</a>
-          <a routerLink="/cookies" class="footer-bottom-link">Cookies</a>
-          <a routerLink="/sitemap" class="footer-bottom-link">Sitemap</a>
-        </div>
-        <div class="footer-location">
-          🌐 Available worldwide
-        </div>
-      </div>
-  
+
     </div>
-  </footer>
+
+    <!-- ── Bottom row ── -->
+    <div class="footer-bottom">
+      <p class="fb-copy">
+        © {{ year }} AkiiraConnect Ltd. All rights reserved.
+        Built with ❤️ for remote workers worldwide.
+      </p>
+      <div class="fb-legal">
+        <a routerLink="/privacy" class="fbl-link">Privacy</a>
+        <span class="fbl-sep">·</span>
+        <a routerLink="/terms"   class="fbl-link">Terms</a>
+        <span class="fbl-sep">·</span>
+        <a routerLink="/cookies" class="fbl-link">Cookies</a>
+      </div>
+    </div>
+
+  </div>
+</footer>

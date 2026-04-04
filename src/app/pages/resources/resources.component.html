@@ -1,0 +1,114 @@
+<!-- src/app/pages/resources/resources.component.html -->
+<div class="res-page">
+
+    <!-- Hero -->
+    <div class="res-hero">
+      <div class="rh-bg">
+        <div class="rh-orb rh-orb-1"></div>
+        <div class="rh-orb rh-orb-2"></div>
+        <div class="rh-grid"></div>
+      </div>
+      <div class="res-container">
+        <div class="rh-eyebrow">Career Resources</div>
+        <h1 class="rh-title">Everything you need to<br><span class="rh-accent">land & thrive</span> remotely</h1>
+        <p class="rh-sub">Free guides, templates, and tools from people who've done it.</p>
+  
+        <div class="rh-search">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Search guides, templates, tools…"/>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Free downloads bar -->
+    <div class="downloads-bar">
+      <div class="res-container">
+        <div class="db-label">📥 Free Downloads</div>
+        <div class="db-items">
+          <div *ngFor="let g of guides" class="db-item">
+            <span class="db-icon">{{ g.icon }}</span>
+            <div>
+              <div class="db-title">{{ g.title }}</div>
+              <div class="db-desc">{{ g.desc }}</div>
+            </div>
+            <button class="db-cta">{{ g.cta }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Main -->
+    <div class="res-container res-body">
+  
+      <!-- Featured row -->
+      <div class="featured-row" *ngIf="activeCategory === 'All' && !searchQuery">
+        <div class="section-eyebrow">⭐ Featured this week</div>
+        <div class="featured-grid">
+          <div *ngFor="let r of featured; trackBy: trackById" class="feat-card" (click)="viewSalaryGuide()">
+            <div class="fc-icon-wrap" [style.background]="r.color + '18'">
+              <span class="fc-icon">{{ r.icon }}</span>
+            </div>
+            <span class="fc-tag" [style.background]="r.color + '15'" [style.color]="r.color">{{ r.tag }}</span>
+            <h3 class="fc-title">{{ r.title }}</h3>
+            <p class="fc-excerpt">{{ r.excerpt }}</p>
+            <div class="fc-footer">
+              <span class="fc-cat">{{ r.category }}</span>
+              <span class="fc-read">{{ r.readTime }} read</span>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Category filters -->
+      <div class="cat-row">
+        <button
+          *ngFor="let c of categories"
+          class="cat-chip"
+          [class.active]="activeCategory === c"
+          (click)="setCategory(c)"
+        >{{ c }}</button>
+      </div>
+  
+      <!-- All resources grid -->
+      <div class="res-grid" *ngIf="filtered.length > 0">
+        <div *ngFor="let r of filtered; trackBy: trackById" class="res-card" (click)="viewSalaryGuide()">
+          <div class="rc-top">
+            <div class="rc-icon" [style.background]="r.color + '15'" [style.color]="r.color">{{ r.icon }}</div>
+            <span class="rc-tag" [style.background]="r.color + '12'" [style.color]="r.color">{{ r.tag }}</span>
+          </div>
+          <h3 class="rc-title">{{ r.title }}</h3>
+          <p class="rc-excerpt">{{ r.excerpt }}</p>
+          <div class="rc-footer">
+            <span class="rc-cat">{{ r.category }}</span>
+            <span class="rc-dot">·</span>
+            <span class="rc-read">{{ r.readTime }} read</span>
+            <span class="rc-arrow">→</span>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Empty -->
+      <div class="res-empty" *ngIf="filtered.length === 0">
+        <div class="re-icon">🔍</div>
+        <h3>No resources found</h3>
+        <p>Try a different search term or category.</p>
+        <button class="re-btn" (click)="searchQuery=''; setCategory('All')">Clear Filters</button>
+      </div>
+  
+      <!-- Salary guide CTA -->
+      <div class="salary-cta">
+        <div class="sc-bg"></div>
+        <div class="sc-inner">
+          <div class="sc-icon">💰</div>
+          <div>
+            <h3 class="sc-title">Know your worth</h3>
+            <p class="sc-sub">Check the 2025 Remote Salary Guide — benchmarks for 80+ roles across engineering, design, data, and more.</p>
+          </div>
+          <button class="sc-btn" (click)="viewSalaryGuide()">View Salary Guide →</button>
+        </div>
+      </div>
+  
+    </div>
+  </div>

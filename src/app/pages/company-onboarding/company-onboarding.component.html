@@ -1,0 +1,313 @@
+<!-- src/app/pages/company-onboarding/company-onboarding.component.html -->
+<div class="co-page">
+
+    <div class="co-bg" aria-hidden="true">
+      <div class="co-orb co-orb-1"></div>
+      <div class="co-orb co-orb-2"></div>
+      <div class="co-grid"></div>
+    </div>
+  
+    <div class="co-wrap">
+  
+      <!-- ── Left panel ── -->
+      <div class="co-left">
+        <a routerLink="/" class="co-logo">
+          <div class="co-logo-mark"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 1L2 5.5V14.5L10 19L18 14.5V5.5L10 1Z" fill="#0c0c0e" opacity=".82"/><path d="M10 5.5L5.5 8.5V14L10 17L14.5 14V8.5L10 5.5Z" fill="#0c0c0e"/></svg></div>
+          <span class="co-logo-name">Akiira<strong>Connect</strong></span>
+        </a>
+  
+        <div class="co-left-content">
+          <div class="co-welcome">
+            <div class="co-welcome-badge">🏢 Employer Account</div>
+            <h2 class="co-welcome-title">Set up your<br>company profile</h2>
+            <p class="co-welcome-sub">A complete profile attracts better candidates and builds employer trust.</p>
+          </div>
+  
+          <!-- Step list -->
+          <div class="co-step-list">
+            <div *ngFor="let s of stepMeta" class="col-step-item"
+              [class.csl-active]="currentStep === s.n"
+              [class.csl-done]="currentStep > s.n">
+              <div class="csl-circle">
+                <svg *ngIf="currentStep > s.n" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span *ngIf="currentStep <= s.n">{{ s.icon }}</span>
+              </div>
+              <div class="csl-text">
+                <div class="csl-title">{{ s.title }}</div>
+                <div class="csl-sub">{{ s.sub }}</div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Employer perks -->
+          <div class="co-perks">
+            <div class="cp-item"><span>📢</span> Post unlimited job listings</div>
+            <div class="cp-item"><span>🔍</span> Search 320K+ freelancer profiles</div>
+            <div class="cp-item"><span>💬</span> Direct messaging to candidates</div>
+            <div class="cp-item"><span>📊</span> Hiring analytics dashboard</div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- ── Right panel ── -->
+      <main class="co-right">
+  
+        <!-- Mobile logo -->
+        <a routerLink="/" class="co-logo co-logo-mobile">
+          <div class="co-logo-mark co-logo-mark-dark"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 1L2 5.5V14.5L10 19L18 14.5V5.5L10 1Z" fill="#0c0c0e" opacity=".82"/><path d="M10 5.5L5.5 8.5V14L10 17L14.5 14V8.5L10 5.5Z" fill="#0c0c0e"/></svg></div>
+          <span class="co-logo-name co-logo-name-dark">Akiira<strong>Connect</strong></span>
+        </a>
+  
+        <!-- Progress -->
+        <div class="co-progress-wrap">
+          <div class="co-progress-bar">
+            <div class="co-progress-fill" [style.width]="progress + '%'"></div>
+          </div>
+          <span class="co-progress-text">Step {{ currentStep }} of {{ totalSteps }}</span>
+        </div>
+  
+        <!-- Step heading -->
+        <div class="co-step-head">
+          <div class="co-step-icon">{{ step.icon }}</div>
+          <div>
+            <h1 class="co-step-title">{{ step.title }}</h1>
+            <p class="co-step-sub">{{ step.sub }}</p>
+          </div>
+        </div>
+  
+        <!-- ════ STEP 1: Company Identity ════ -->
+        <form *ngIf="currentStep === 1" [formGroup]="step1" novalidate class="co-form">
+  
+          <div class="form-row" [class.fe]="inv(step1,'companyName')">
+            <label class="form-label">Company name *</label>
+            <div class="iw">
+              <span class="iicon">🏢</span>
+              <input class="form-input" formControlName="companyName" type="text" placeholder="e.g. Acme Technologies"/>
+            </div>
+            <span class="form-err" *ngIf="inv(step1,'companyName')">Required</span>
+          </div>
+  
+          <div class="form-row" [class.fe]="inv(step1,'tagline')">
+            <label class="form-label">
+              Company tagline *
+              <span class="fhi">What you do in one memorable line</span>
+            </label>
+            <input class="form-input" formControlName="tagline" type="text" placeholder="e.g. Making remote work work for everyone"/>
+            <div class="form-row-foot">
+              <span class="form-err" *ngIf="inv(step1,'tagline')">Min 10 characters</span>
+              <span class="form-count">{{ step1.get('tagline')?.value?.length || 0 }}/120</span>
+            </div>
+          </div>
+  
+          <div class="form-row" [class.fe]="inv(step1,'website')">
+            <label class="form-label">Company website *</label>
+            <div class="iw">
+              <span class="iprefix">https://</span>
+              <input class="form-input ipfx" formControlName="website" type="text" placeholder="yourcompany.com"/>
+            </div>
+            <span class="form-err" *ngIf="inv(step1,'website')">Required</span>
+          </div>
+  
+          <div class="form-grid-2">
+            <div class="form-row" [class.fe]="inv(step1,'companySize')">
+              <label class="form-label">Company size *</label>
+              <select class="form-select" formControlName="companySize">
+                <option value="" disabled>Select…</option>
+                <option *ngFor="let s of companySizes" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="form-row" [class.fe]="inv(step1,'industry')">
+              <label class="form-label">Industry *</label>
+              <select class="form-select" formControlName="industry">
+                <option value="" disabled>Select…</option>
+                <option *ngFor="let i of industries" [value]="i">{{ i }}</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Year founded <span class="fhi">Optional</span></label>
+              <input class="form-input" formControlName="founded" type="text" placeholder="e.g. 2018"/>
+            </div>
+            <div class="form-row" [class.fe]="inv(step1,'location')">
+              <label class="form-label">HQ location *</label>
+              <div class="iw">
+                <span class="iicon">📍</span>
+                <input class="form-input" formControlName="location" type="text" placeholder="e.g. Lagos, Nigeria"/>
+              </div>
+            </div>
+          </div>
+  
+        </form>
+  
+        <!-- ════ STEP 2: About ════ -->
+        <form *ngIf="currentStep === 2" [formGroup]="step2" novalidate class="co-form">
+  
+          <div class="form-row" [class.fe]="inv(step2,'description')">
+            <label class="form-label">
+              Company description *
+              <span class="fhi">Min 100 characters</span>
+            </label>
+            <textarea class="form-textarea" formControlName="description" rows="6"
+              placeholder="Tell candidates what your company does, your product or service, the markets you serve, and why your company exists. Be specific — vague descriptions get ignored.
+  
+  e.g. Acme Technologies builds cloud-based logistics software used by 500+ warehouses across Africa and the Middle East. We process 2M+ shipping events per day and are growing 3× year-over-year."></textarea>
+            <div class="form-row-foot">
+              <span class="form-err" *ngIf="inv(step2,'description')">{{ descLength < 100 ? 'Need ' + (100 - descLength) + ' more characters' : 'Required' }}</span>
+              <span class="form-count" [class.form-count-warn]="descLength < 100">{{ descLength }}/1000</span>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">Mission statement <span class="fhi">Optional — but powerful</span></label>
+            <textarea class="form-textarea" formControlName="mission" rows="2"
+              placeholder="e.g. To make quality healthcare accessible to every person in Africa through technology."></textarea>
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">Company culture <span class="fhi">Optional — what's it like to work there?</span></label>
+            <textarea class="form-textarea" formControlName="culture" rows="3"
+              placeholder="e.g. We're async-first, results-driven, and fully remote. We believe great ideas come from diverse teams and that the best work happens when people have autonomy and trust."></textarea>
+          </div>
+  
+        </form>
+  
+        <!-- ════ STEP 3: Hiring Preferences ════ -->
+        <form *ngIf="currentStep === 3" [formGroup]="step3" novalidate class="co-form">
+  
+          <!-- Hiring volume -->
+          <div class="form-row" [class.fe]="inv(step3,'hiringVolume')">
+            <label class="form-label">How many hires are you planning this quarter? *</label>
+            <div class="vol-options">
+              <label *ngFor="let v of hiringVolumes" class="vol-opt" [class.selected]="step3.get('hiringVolume')?.value === v">
+                <input type="radio" formControlName="hiringVolume" [value]="v"/>
+                {{ v }}
+              </label>
+            </div>
+          </div>
+  
+          <!-- Budget range -->
+          <div class="form-row" [class.fe]="inv(step3,'budgetRange')">
+            <label class="form-label">Typical budget per hire *</label>
+            <div class="vol-options vol-options-wrap">
+              <label *ngFor="let b of budgetRanges" class="vol-opt" [class.selected]="step3.get('budgetRange')?.value === b">
+                <input type="radio" formControlName="budgetRange" [value]="b"/>
+                {{ b }}
+              </label>
+            </div>
+          </div>
+  
+          <!-- Contract types -->
+          <div class="form-row">
+            <label class="form-label">Contract types you offer</label>
+            <div class="chip-row">
+              <button *ngFor="let t of contractTypes" type="button" class="chip" [class.selected]="selectedContractTypes.includes(t)" (click)="toggleContractType(t)">{{ t }}</button>
+            </div>
+          </div>
+  
+          <!-- Remote policy -->
+          <div class="form-row">
+            <label class="form-label">Remote work policy *</label>
+            <select class="form-select" formControlName="remotePolicy">
+              <option>Remote (Global)</option>
+              <option>Remote (US only)</option>
+              <option>Remote (EU only)</option>
+              <option>Remote (US/EU)</option>
+              <option>Hybrid — some office required</option>
+              <option>On-site only</option>
+            </select>
+          </div>
+  
+          <!-- Roles you're hiring for -->
+          <div class="form-row">
+            <label class="form-label">Roles you're hiring for <span class="fhi">Optional — helps with matching</span></label>
+            <div class="skills-wrap" [class.skills-empty]="hiringRoles.length === 0">
+              <span *ngIf="hiringRoles.length === 0" class="skills-placeholder">Select or type roles below</span>
+              <span *ngFor="let r of hiringRoles" class="skill-chip">
+                {{ r }}
+                <button class="skill-rm" type="button" (click)="removeRole(r)">×</button>
+              </span>
+            </div>
+            <div class="skill-add-row">
+              <input class="form-input" type="text" [(ngModel)]="newRole" [ngModelOptions]="{standalone:true}" placeholder="Type a role title…" (keydown.enter)="$event.preventDefault(); addRole()"/>
+              <button type="button" class="skill-add-btn" (click)="addRole()" [disabled]="!newRole.trim()">+ Add</button>
+            </div>
+            <div class="suggestions-wrap">
+              <button *ngFor="let r of roleOptions" type="button" class="suggestion-chip" [class.suggestion-added]="hasRole(r)" (click)="hasRole(r) ? removeRole(r) : addRole(r)">
+                <span *ngIf="hasRole(r)">✓ </span>{{ r }}
+              </button>
+            </div>
+          </div>
+  
+        </form>
+  
+        <!-- ════ STEP 4: Links ════ -->
+        <form *ngIf="currentStep === 4" [formGroup]="step4" novalidate class="co-form">
+  
+          <div class="links-note">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Companies with LinkedIn and Glassdoor links receive 4× more qualified applications.
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#0052cc"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452z"/></svg>
+              LinkedIn Company Page
+            </label>
+            <div class="iw">
+              <span class="iprefix">linkedin.com/company/</span>
+              <input class="form-input ipfx" formControlName="linkedin" type="text" placeholder="yourcompany"/>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#1d9bf0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              Twitter / X
+            </label>
+            <div class="iw">
+              <span class="iprefix">twitter.com/</span>
+              <input class="form-input ipfx" formControlName="twitter" type="text" placeholder="yourcompany"/>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#24292f"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+              GitHub Organization
+            </label>
+            <div class="iw">
+              <span class="iprefix">github.com/</span>
+              <input class="form-input ipfx" formControlName="github" type="text" placeholder="yourcompany"/>
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label class="form-label">🟡 Glassdoor Profile</label>
+            <div class="iw">
+              <span class="iprefix">glassdoor.com/Overview/</span>
+              <input class="form-input ipfx" formControlName="glassdoor" type="text" placeholder="your-company"/>
+            </div>
+          </div>
+  
+        </form>
+  
+        <!-- ── Navigation ── -->
+        <div class="co-nav">
+          <button class="co-skip" type="button" (click)="skip()">Skip for now</button>
+  
+          <div class="co-nav-right">
+            <button class="co-btn-back" type="button" *ngIf="currentStep > 1" (click)="prev()">← Back</button>
+  
+            <button class="co-btn-next" type="button" *ngIf="currentStep < totalSteps" (click)="next()">
+              Continue →
+            </button>
+  
+            <button class="co-btn-finish" type="button" *ngIf="currentStep === totalSteps" (click)="complete()" [disabled]="saving">
+              <span *ngIf="!saving">🚀 Complete Company Profile</span>
+              <span class="co-loader" *ngIf="saving"><span class="co-spin"></span> Saving…</span>
+            </button>
+          </div>
+        </div>
+  
+      </main>
+    </div>
+  </div>

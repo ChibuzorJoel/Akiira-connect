@@ -1,183 +1,119 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-
-interface Category {
-  icon: string;
-  name: string;
-  count: string;
-  hot?: boolean;
-}
-
-interface Job {
-  id: number;
-  title: string;
-  company: string;
-  logo: string;
-  logoColor: string;
-  salary: string;
-  type: string;
-  location: string;
-  tags: string[];
-  posted: string;
-  applicants: number;
-  featured?: boolean;
-  saved?: boolean;
-}
-
-interface Testimonial {
-  name: string;
-  role: string;
-  company: string;
-  avatar: string;
-  avatarColor: string;
-  text: string;
-  hired: string;
-  salary: string;
-}
-
-interface Stat {
-  value: string;
-  label: string;
-  icon: string;
-}
+// src/app/pages/home/home.component.ts
+import {
+  Component, OnInit, OnDestroy,
+  ChangeDetectionStrategy, ChangeDetectorRef
+} from '@angular/core';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent implements OnInit, OnDestroy {
 
-  searchQuery = '';
+  searchQuery    = '';
   searchLocation = 'Remote';
-  activeJobType = 'All';
-  currentTestimonial = 0;
-  private testimonialTimer!: ReturnType<typeof setInterval>;
+  activeCategory = 'All';
 
-  jobTypes = ['All', 'Full-time', 'Contract', 'Part-time', 'Freelance'];
+  readonly categories = ['All', 'Engineering', 'Design', 'AI/ML', 'Data', 'DevOps', 'Mobile'];
 
-  stats: Stat[] = [
-    { value: '48K+',  label: 'Remote Jobs',        icon: '💼' },
-    { value: '12K+',  label: 'Companies Hiring',   icon: '🏢' },
-    { value: '320K+', label: 'Freelancers Hired',  icon: '🌍' },
-    { value: '98%',   label: 'Satisfaction Rate',  icon: '⭐' },
+  readonly stats = [
+    { value: '48,200+', label: 'Remote Jobs'       },
+    { value: '12,500+', label: 'Companies Hiring'  },
+    { value: '320K+',   label: 'Freelancers Hired' },
+    { value: '18hrs',   label: 'Avg. Response'     },
   ];
 
-  categories: Category[] = [
-    { icon: '💻', name: 'Software Dev',     count: '14,200', hot: true  },
-    { icon: '🎨', name: 'Design & UX',      count: '6,800'              },
-    { icon: '📊', name: 'Data & Analytics', count: '4,500', hot: true  },
-    { icon: '✍️', name: 'Writing',          count: '3,200'              },
-    { icon: '📱', name: 'Mobile Dev',       count: '2,900'              },
-    { icon: '☁️', name: 'Cloud & DevOps',   count: '2,400'              },
-    { icon: '🔒', name: 'Cybersecurity',    count: '1,800'              },
-    { icon: '🤖', name: 'AI / ML',          count: '3,600', hot: true  },
-    { icon: '📣', name: 'Marketing',        count: '2,100'              },
-    { icon: '💰', name: 'Finance',          count: '1,600'              },
+  readonly featuredJobs = [
+    { id: 6,  logo: 'O', logoColor: '#8b5cf6', title: 'AI / ML Engineer',          company: 'OpenAI',  salary: '$160K–$220K', tags: ['Python','PyTorch'], matchScore: 91, postedAt: '3h ago'  },
+    { id: 1,  logo: 'S', logoColor: '#6366f1', title: 'Senior React Developer',     company: 'Stripe',  salary: '$120K–$160K', tags: ['React','TypeScript'], matchScore: 92, postedAt: '2h ago' },
+    { id: 3,  logo: 'V', logoColor: '#10b981', title: 'Full-Stack Engineer',        company: 'Vercel',  salary: '$110K–$150K', tags: ['Angular','Node.js'], matchScore: 95, postedAt: '1d ago' },
+    { id: 7,  logo: 'S', logoColor: '#059669', title: 'Frontend Architect',         company: 'Shopify', salary: '$140K–$190K', tags: ['React','Next.js'], matchScore: 87, postedAt: '4h ago'   },
   ];
 
-  featuredJobs: Job[] = [
-    {
-      id: 1, title: 'Senior React Developer', company: 'Stripe',
-      logo: 'S', logoColor: '#6366f1',
-      salary: '$120K – $160K', type: 'Full-time', location: 'Remote (Global)',
-      tags: ['React', 'TypeScript', 'GraphQL'],
-      posted: '2h ago', applicants: 43, featured: true, saved: false,
-    },
-    {
-      id: 2, title: 'Product Designer (UI/UX)', company: 'Notion',
-      logo: 'N', logoColor: '#0ea5e9',
-      salary: '$80 – $120/hr', type: 'Contract', location: 'Remote (US)',
-      tags: ['Figma', 'Prototyping', 'User Research'],
-      posted: '5h ago', applicants: 28, saved: false,
-    },
-    {
-      id: 3, title: 'Full-Stack Engineer', company: 'Vercel',
-      logo: 'V', logoColor: '#10b981',
-      salary: '$110K – $150K', type: 'Full-time', location: 'Remote (Global)',
-      tags: ['Angular', 'Node.js', 'AWS'],
-      posted: '1d ago', applicants: 67, featured: true, saved: false,
-    },
-    {
-      id: 4, title: 'Senior Data Scientist', company: 'Airbnb',
-      logo: 'A', logoColor: '#f59e0b',
-      salary: '$130K – $180K', type: 'Full-time', location: 'Remote (Global)',
-      tags: ['Python', 'SQL', 'Machine Learning'],
-      posted: '1d ago', applicants: 102, saved: false,
-    },
-    {
-      id: 5, title: 'DevOps / Cloud Engineer', company: 'Figma',
-      logo: 'F', logoColor: '#ec4899',
-      salary: '$125K – $165K', type: 'Full-time', location: 'Remote (US/EU)',
-      tags: ['Kubernetes', 'AWS', 'Terraform'],
-      posted: '2d ago', applicants: 51, saved: false,
-    },
-    {
-      id: 6, title: 'AI/ML Engineer', company: 'OpenAI',
-      logo: 'O', logoColor: '#8b5cf6',
-      salary: '$160K – $220K', type: 'Full-time', location: 'Remote (Global)',
-      tags: ['Python', 'PyTorch', 'LLMs'],
-      posted: '3h ago', applicants: 189, featured: true, saved: false,
-    },
+  readonly testimonials = [
+    { name: 'Adaeze Okonkwo', role: 'UX Designer · Notion', avatar: 'AO', color: '#6366f1', text: 'Found my dream remote contract in 6 days. The match score feature is incredibly accurate — every job it recommended was a genuine fit.' },
+    { name: 'Marcus Teixeira', role: 'ML Engineer · Scale AI', avatar: 'MT', color: '#0ea5e9', text: "Negotiated $40K above my asking price using the salary guide. This platform completely changed how I approach job hunting." },
+    { name: 'Priya Nair', role: 'DevOps Engineer · Figma', avatar: 'PN', color: '#10b981', text: 'Applied to 8 jobs Sunday morning. By Thursday I had 3 interviews. The quick-apply feature saves hours per application.' },
+    { name: 'Tunde Adeyemi', role: 'Senior Frontend Dev · GitHub', avatar: 'TA', color: '#f59e0b', text: 'As someone in Lagos, finding legitimate remote work used to be a nightmare. Akiira Connect opened doors I thought were closed to me.' },
   ];
 
-  testimonials: Testimonial[] = [
-    {
-      name: 'Tunde Adeyemi', role: 'Senior Frontend Engineer', company: 'Stripe',
-      avatar: 'TA', avatarColor: '#6366f1',
-      text: 'RemoteWork completely changed my career. Within 3 weeks I had 4 interviews and landed a $140K remote role at Stripe. The quality of companies on here is unreal.',
-      hired: '3 weeks', salary: '$140K',
-    },
-    {
-      name: 'Priya Sharma', role: 'UX Designer', company: 'Notion',
-      avatar: 'PS', avatarColor: '#0ea5e9',
-      text: 'I was skeptical at first but the filtering is incredible. Found a 100% remote contract with Notion that pays better than my old in-office job. Game changer.',
-      hired: '10 days', salary: '$95/hr',
-    },
-    {
-      name: 'Marcus Chen', role: 'ML Engineer', company: 'Scale AI',
-      avatar: 'MC', avatarColor: '#10b981',
-      text: 'Applied to 6 jobs, got 3 responses, 2 offers. The resume tips and salary guide helped me negotiate $30K more than my initial ask. Absolutely worth it.',
-      hired: '2 weeks', salary: '$185K',
-    },
+  readonly howItWorks = [
+    { step: '01', icon: '👤', title: 'Build your profile',  desc: 'Set up once. Your skills, experience, and preferences create a profile that speaks for you.' },
+    { step: '02', icon: '🎯', title: 'Get matched',         desc: 'Our algorithm surfaces roles that genuinely fit your background — with a match score for every job.' },
+    { step: '03', icon: '⚡', title: 'Apply in seconds',    desc: 'Quick Apply sends your profile with one click. No reformatting, no re-entering info.' },
+    { step: '04', icon: '💬', title: 'Connect directly',    desc: 'Chat directly with hiring managers. No recruiters, no middlemen, no delays.' },
   ];
+
+  readonly companies = [
+    { name: 'Stripe',    logo: 'S', color: '#6366f1' },
+    { name: 'Vercel',    logo: 'V', color: '#10b981' },
+    { name: 'OpenAI',    logo: 'O', color: '#8b5cf6' },
+    { name: 'Notion',    logo: 'N', color: '#0ea5e9' },
+    { name: 'Figma',     logo: 'F', color: '#ec4899' },
+    { name: 'GitHub',    logo: 'G', color: '#24292f' },
+    { name: 'Shopify',   logo: 'S', color: '#059669' },
+    { name: 'Airbnb',    logo: 'A', color: '#f59e0b' },
+    { name: 'Discord',   logo: 'D', color: '#5865f2' },
+    { name: 'Linear',    logo: 'L', color: '#5b5bd6' },
+    { name: 'Atlassian', logo: 'A', color: '#0052cc' },
+    { name: 'Canva',     logo: 'C', color: '#7d2ae8' },
+  ];
+
+  activeTestimonial = 0;
+  isLoggedIn        = false;
+  private subs      = new Subscription();
+  private ticker!:   ReturnType<typeof setInterval>;
+
+  constructor(
+    private router: Router,
+    private auth:   AuthService,
+    private cdr:    ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
-    this.testimonialTimer = setInterval(() => {
-      this.nextTestimonial();
+    this.subs.add(
+      this.auth.user$.subscribe(u => {
+        this.isLoggedIn = !!u;
+        this.cdr.markForCheck();
+      })
+    );
+    this.ticker = setInterval(() => {
+      this.activeTestimonial = (this.activeTestimonial + 1) % this.testimonials.length;
+      this.cdr.markForCheck();
     }, 5000);
   }
 
   ngOnDestroy(): void {
-    clearInterval(this.testimonialTimer);
-  }
-
-  setJobType(type: string): void {
-    this.activeJobType = type;
-  }
-
-  toggleSave(job: Job, event: Event): void {
-    event.stopPropagation();
-    job.saved = !job.saved;
-  }
-
-  nextTestimonial(): void {
-    this.currentTestimonial = (this.currentTestimonial + 1) % this.testimonials.length;
-  }
-
-  setTestimonial(i: number): void {
-    this.currentTestimonial = i;
+    this.subs.unsubscribe();
+    clearInterval(this.ticker);
   }
 
   search(): void {
-    console.log('Search:', this.searchQuery, this.searchLocation);
-    // router.navigate(['/jobs', { q: this.searchQuery }])
+    this.router.navigate(['/jobs'], {
+      queryParams: this.searchQuery ? { q: this.searchQuery } : {}
+    });
   }
 
-  setSearch(term: string): void {
-    this.searchQuery = term;
-    this.search();
+  goToJobs(category?: string): void {
+    this.router.navigate(['/jobs'], {
+      queryParams: category && category !== 'All' ? { cat: category } : {}
+    });
+  }
+
+  viewJob(id: number): void { this.router.navigate(['/jobs', id]); }
+
+  setTestimonial(i: number): void {
+    this.activeTestimonial = i;
+    clearInterval(this.ticker);
+    this.ticker = setInterval(() => {
+      this.activeTestimonial = (this.activeTestimonial + 1) % this.testimonials.length;
+      this.cdr.markForCheck();
+    }, 5000);
+    this.cdr.markForCheck();
   }
 }

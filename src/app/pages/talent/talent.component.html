@@ -1,0 +1,121 @@
+<!-- src/app/pages/talent/talent.component.html -->
+<div class="talent-page">
+
+    <!-- Header -->
+    <div class="tp-header">
+      <div class="tp-container">
+        <div class="tph-top">
+          <div>
+            <h1 class="tph-title">Browse Remote Talent</h1>
+            <p class="tph-sub"><strong>{{ allFiltered.length }}</strong> freelancers available right now</p>
+          </div>
+          <div class="tph-search">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" [(ngModel)]="searchQuery" (input)="applyFilters()" placeholder="Search by name, skill, or role…"/>
+          </div>
+        </div>
+  
+        <!-- Sort + filter bar -->
+        <div class="tph-bar">
+          <div class="tph-cats">
+            <button *ngFor="let c of categories" class="tph-cat" [class.active]="activeCategory===c" (click)="setCategory(c)">{{ c }}</button>
+          </div>
+          <div class="tph-sort">
+            <span class="sort-lbl">Sort:</span>
+            <button *ngFor="let s of sortOptions" class="sort-opt" [class.active]="sortBy===s" (click)="setSort(s)">{{ s }}</button>
+          </div>
+          <button class="filter-btn" (click)="sidebarOpen = !sidebarOpen">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
+            Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Body -->
+    <div class="tp-container tp-body">
+  
+      <!-- Sidebar -->
+      <aside class="tp-sidebar" [class.open]="sidebarOpen">
+        <div class="sb-head">
+          <span>Filters</span>
+          <button (click)="clearFilters()">Clear all</button>
+        </div>
+  
+        <div class="sb-group">
+          <div class="sb-group-title">Availability</div>
+          <label *ngFor="let a of availOptions" class="sb-opt">
+            <input type="radio" name="avl" [checked]="activeAvail===a" (change)="setAvail(a)"/>
+            <span class="sb-radio"></span>
+            <span>{{ a }}</span>
+          </label>
+        </div>
+  
+        <div class="sb-group">
+          <div class="sb-group-title">Max hourly rate: ${{ maxRate }}/hr</div>
+          <input type="range" min="30" max="200" step="5" [(ngModel)]="maxRate" (input)="applyFilters()" class="sb-range"/>
+          <div class="sb-range-labels"><span>$30</span><span>$200+</span></div>
+        </div>
+  
+        <button class="sb-apply" (click)="sidebarOpen=false">Apply</button>
+      </aside>
+      <div class="sb-overlay" [class.open]="sidebarOpen" (click)="sidebarOpen=false"></div>
+  
+      <!-- Grid -->
+      <main class="tp-main">
+  
+        <div class="talent-empty" *ngIf="allFiltered.length === 0">
+          <div>👥</div>
+          <h3>No freelancers found</h3>
+          <p>Try adjusting your filters.</p>
+          <button (click)="clearFilters()">Clear Filters</button>
+        </div>
+  
+        <div class="talent-grid" *ngIf="allFiltered.length > 0">
+          <div *ngFor="let f of allFiltered; trackBy: trackById" class="talent-card" [class.tc-featured]="f.featured">
+  
+            <div class="tc-featured-badge" *ngIf="f.featured">⭐ Featured</div>
+  
+            <div class="tc-top">
+              <div class="tc-av" [style.background]="f.avatarColor">{{ f.initials }}</div>
+              <div class="tc-avail-badge" [style.background]="f.availColor+'18'" [style.color]="f.availColor" [style.border-color]="f.availColor+'30'">
+                <span class="tc-avail-dot" [style.background]="f.availColor"></span>
+                {{ f.availability }}
+              </div>
+            </div>
+  
+            <div class="tc-name">{{ f.name }}</div>
+            <div class="tc-headline">{{ f.headline }}</div>
+  
+            <div class="tc-skills">
+              <span *ngFor="let s of f.skills.slice(0,3)" class="tc-skill">{{ s }}</span>
+            </div>
+  
+            <p class="tc-bio">{{ f.bio }}</p>
+  
+            <div class="tc-rating">
+              <div class="tcr-stars">
+                <span *ngFor="let s of stars(f.rating)" class="star" [class.full]="s==='full'" [class.half]="s==='half'">★</span>
+              </div>
+              <span class="tcr-score">{{ f.rating }}</span>
+              <span class="tcr-count">({{ f.reviews }})</span>
+              <span class="tcr-hired">· {{ f.hiredCount }} hires</span>
+            </div>
+  
+            <div class="tc-meta">
+              <span>📍 {{ f.location }}</span>
+              <span>⚡ {{ f.responseTime }}</span>
+            </div>
+  
+            <div class="tc-footer">
+              <div class="tc-rate">{{ f.hourlyRate }}</div>
+              <button class="tc-hire-btn">Message →</button>
+            </div>
+          </div>
+        </div>
+  
+      </main>
+    </div>
+  </div>

@@ -1,0 +1,175 @@
+<!-- src/app/pages/companies/companies.component.html -->
+<div class="companies-page">
+
+    <!-- ── Header ── -->
+    <div class="cp-header">
+      <div class="cp-container">
+        <div class="cph-top">
+          <div>
+            <h1 class="cph-title">Top Remote Companies</h1>
+            <p class="cph-sub"><strong>{{ filteredCompanies.length }}</strong> companies actively hiring</p>
+          </div>
+  
+          <!-- Search -->
+          <div class="cph-search">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              type="text"
+              [(ngModel)]="searchQuery"
+              (input)="applyFilters()"
+              placeholder="Search companies, industries…"
+            />
+          </div>
+        </div>
+  
+        <!-- Tabs + Sort -->
+        <div class="cph-bar">
+          <div class="cph-tabs">
+            <button
+              *ngFor="let s of sortOptions"
+              class="cph-tab"
+              [class.active]="sortBy === s"
+              (click)="setSort(s)"
+            >{{ s }}</button>
+          </div>
+  
+          <label class="remote-toggle">
+            <input type="checkbox" [(ngModel)]="remoteOnly" (change)="applyFilters()"/>
+            <span class="rt-slider"></span>
+            <span class="rt-label">Remote only</span>
+          </label>
+  
+          <button class="filter-toggle-btn" (click)="sidebarOpen = !sidebarOpen">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <line x1="4" y1="6" x2="20" y2="6"/>
+              <line x1="4" y1="12" x2="14" y2="12"/>
+              <line x1="4" y1="18" x2="18" y2="18"/>
+            </svg>
+            Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- ── Body ── -->
+    <div class="cp-container cp-body">
+  
+      <!-- Sidebar -->
+      <aside class="cp-sidebar" [class.open]="sidebarOpen">
+        <div class="sb-head">
+          <span class="sb-head-title">Filters</span>
+          <button class="sb-clear" (click)="clearFilters()">Clear all</button>
+        </div>
+  
+        <div class="sb-group">
+          <div class="sb-group-title">Industry</div>
+          <label *ngFor="let ind of industries.slice(0,8)" class="sb-opt">
+            <input type="radio" name="ind" [checked]="activeIndustry === ind" (change)="setIndustry(ind)"/>
+            <span class="sb-radio"></span>
+            <span>{{ ind }}</span>
+          </label>
+        </div>
+  
+        <div class="sb-group">
+          <div class="sb-group-title">Company size</div>
+          <label *ngFor="let sz of sizes" class="sb-opt">
+            <input type="radio" name="sz" [checked]="activeSize === sz" (change)="setSize(sz)"/>
+            <span class="sb-radio"></span>
+            <span>{{ sz }} employees</span>
+          </label>
+        </div>
+  
+        <button class="sb-apply-btn" (click)="sidebarOpen = false">Apply Filters</button>
+      </aside>
+  
+      <div class="sidebar-overlay" [class.open]="sidebarOpen" (click)="sidebarOpen = false"></div>
+  
+      <!-- Grid -->
+      <main class="cp-main">
+  
+        <!-- Empty -->
+        <div class="cp-empty" *ngIf="filteredCompanies.length === 0">
+          <div class="cpe-icon">🏢</div>
+          <h3>No companies found</h3>
+          <p>Try adjusting your search or filters.</p>
+          <button class="cpe-btn" (click)="clearFilters()">Clear Filters</button>
+        </div>
+  
+        <!-- Company cards -->
+        <div class="company-grid" *ngIf="filteredCompanies.length > 0">
+          <div
+            *ngFor="let c of filteredCompanies; trackBy: trackById"
+            class="company-card"
+            [class.company-card-featured]="c.featured"
+            (click)="viewCompany(c.id)"
+          >
+            <!-- Featured label -->
+            <div class="cc-featured-badge" *ngIf="c.featured">⭐ Featured</div>
+  
+            <!-- Card top -->
+            <div class="cc-top">
+              <div class="cc-logo" [style.background]="c.logoColor">{{ c.logo }}</div>
+              <div class="cc-verified" *ngIf="c.verified" title="Verified employer">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+            </div>
+  
+            <h3 class="cc-name">{{ c.name }}</h3>
+            <p class="cc-tagline">{{ c.tagline }}</p>
+  
+            <!-- Meta pills -->
+            <div class="cc-meta">
+              <span class="cc-meta-item">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                {{ c.location }}
+              </span>
+              <span class="cc-meta-item">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                {{ c.size }}
+              </span>
+              <span class="cc-meta-item cc-remote" *ngIf="c.remote">🌍 Remote</span>
+            </div>
+  
+            <!-- Tags -->
+            <div class="cc-tags">
+              <span *ngFor="let tag of c.tags.slice(0,3)" class="cc-tag">{{ tag }}</span>
+            </div>
+  
+            <!-- Rating -->
+            <div class="cc-rating">
+              <div class="ccr-stars">
+                <span *ngFor="let s of stars(c.rating)" class="star" [class.full]="s === 'full'" [class.half]="s === 'half'">★</span>
+              </div>
+              <span class="ccr-score">{{ c.rating }}</span>
+              <span class="ccr-count">({{ c.reviews | number }})</span>
+            </div>
+  
+            <!-- Footer -->
+            <div class="cc-footer">
+              <div class="cc-jobs-count">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="2" y="7" width="20" height="14" rx="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <strong>{{ c.openRoles }}</strong> open roles
+              </div>
+              <button class="cc-view-btn" (click)="viewCompany(c.id); $event.stopPropagation()">
+                View →
+              </button>
+            </div>
+          </div>
+        </div>
+  
+      </main>
+    </div>
+  </div>

@@ -1,0 +1,261 @@
+<!-- src/app/pages/settings/settings.component.html -->
+<div class="settings-page">
+    <div class="settings-container">
+  
+      <!-- Save toast -->
+      <div class="save-toast" [class.show]="saveSuccess">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        {{ saveSuccess }}
+      </div>
+  
+      <div class="settings-header">
+        <h1 class="sh-title">Settings</h1>
+        <p class="sh-sub">Manage your account, privacy and notifications</p>
+      </div>
+  
+      <div class="settings-body">
+  
+        <!-- Sidebar -->
+        <aside class="settings-nav">
+          <button
+            *ngFor="let s of sections"
+            class="sn-item"
+            [class.active]="activeSection === s.id"
+            [class.danger]="s.id === 'danger'"
+            (click)="setSection(s.id)"
+          >
+            <span class="sn-icon">{{ s.icon }}</span>
+            {{ s.label }}
+          </button>
+        </aside>
+  
+        <!-- Content -->
+        <div class="settings-content">
+  
+          <!-- ── ACCOUNT ── -->
+          <div class="s-panel" *ngIf="activeSection === 'account'">
+            <h2 class="sp-title">Account Information</h2>
+  
+            <!-- Avatar row -->
+            <div class="avatar-row">
+              <div class="set-av">{{ userInitials }}</div>
+              <div>
+                <div class="av-name">{{ currentUser?.fullName }}</div>
+                <div class="av-email">{{ currentUser?.email }}</div>
+              </div>
+            </div>
+  
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="form-label">Full name</label>
+                <input class="form-input" type="text" [(ngModel)]="editName" placeholder="Your full name"/>
+              </div>
+              <div class="form-row">
+                <label class="form-label">Email address</label>
+                <input class="form-input" type="email" [(ngModel)]="editEmail" placeholder="you@example.com"/>
+                <span class="form-hint">⚠️ Changing email requires verification</span>
+              </div>
+            </div>
+  
+            <div class="sp-actions">
+              <button class="btn-save" (click)="saveAccount()">Save Changes</button>
+            </div>
+          </div>
+  
+          <!-- ── PASSWORD ── -->
+          <div class="s-panel" *ngIf="activeSection === 'password'">
+            <h2 class="sp-title">Change Password</h2>
+            <p class="sp-sub">Use a strong password — at least 8 characters with uppercase, numbers, and symbols.</p>
+  
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="form-label">Current password</label>
+                <div class="input-wrap">
+                  <input class="form-input" [type]="showCurrent ? 'text' : 'password'" [(ngModel)]="currentPassword" placeholder="Enter current password"/>
+                  <button class="eye-btn" type="button" (click)="showCurrent = !showCurrent">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">New password</label>
+                <div class="input-wrap">
+                  <input class="form-input" [type]="showNew ? 'text' : 'password'" [(ngModel)]="newPassword" placeholder="Min. 8 characters"/>
+                  <button class="eye-btn" type="button" (click)="showNew = !showNew">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">Confirm new password</label>
+                <div class="input-wrap">
+                  <input class="form-input" [type]="showConfirm ? 'text' : 'password'" [(ngModel)]="confirmPassword" placeholder="Repeat new password"/>
+                  <button class="eye-btn" type="button" (click)="showConfirm = !showConfirm">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+  
+            <div class="sp-actions">
+              <button class="btn-save" (click)="savePassword()">Update Password</button>
+            </div>
+          </div>
+  
+          <!-- ── NOTIFICATIONS ── -->
+          <div class="s-panel" *ngIf="activeSection === 'notifications'">
+            <h2 class="sp-title">Notification Preferences</h2>
+            <p class="sp-sub">Choose what updates you want to receive.</p>
+  
+            <div class="toggle-list">
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">New messages</div>
+                  <div class="tr-desc">When a recruiter or employer messages you</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifications.newMessages"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">Application updates</div>
+                  <div class="tr-desc">Status changes on your job applications</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifications.applicationUpdates"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">Job recommendations</div>
+                  <div class="tr-desc">New jobs matching your profile and skills</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifications.jobRecommendations"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">Weekly digest</div>
+                  <div class="tr-desc">Summary of top jobs every Monday morning</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifications.weeklyDigest"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">Marketing emails</div>
+                  <div class="tr-desc">Product news, tips, and special offers</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifications.marketingEmails"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+            </div>
+  
+            <div class="sp-actions">
+              <button class="btn-save" (click)="saveNotifications()">Save Preferences</button>
+            </div>
+          </div>
+  
+          <!-- ── PRIVACY ── -->
+          <div class="s-panel" *ngIf="activeSection === 'privacy'">
+            <h2 class="sp-title">Privacy Settings</h2>
+            <p class="sp-sub">Control who can see your profile and how you appear to employers.</p>
+  
+            <div class="toggle-list">
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">Public profile</div>
+                  <div class="tr-desc">Allow employers to find and view your profile</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="privacy.profileVisible"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">Show salary expectation</div>
+                  <div class="tr-desc">Display your hourly rate on your public profile</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="privacy.showSalaryExpect"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">Allow recruiter messages</div>
+                  <div class="tr-desc">Let verified recruiters contact you directly</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="privacy.allowRecruiterMsg"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <div class="tr-label">Show online status</div>
+                  <div class="tr-desc">Let others see when you're active on the platform</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="privacy.showOnlineStatus"/>
+                  <span class="ts-slider"></span>
+                </label>
+              </div>
+            </div>
+  
+            <div class="sp-actions">
+              <button class="btn-save" (click)="savePrivacy()">Save Privacy Settings</button>
+            </div>
+          </div>
+  
+          <!-- ── DANGER ZONE ── -->
+          <div class="s-panel" *ngIf="activeSection === 'danger'">
+            <h2 class="sp-title sp-title-danger">Danger Zone</h2>
+            <p class="sp-sub">Irreversible and destructive actions.</p>
+  
+            <div class="danger-cards">
+              <div class="danger-card">
+                <div>
+                  <div class="dc-title">Sign out of all devices</div>
+                  <div class="dc-desc">Revoke all active sessions across every device you've used.</div>
+                </div>
+                <button class="btn-danger-ghost" (click)="signOut()">Sign Out Everywhere</button>
+              </div>
+  
+              <div class="danger-card danger-card-red">
+                <div>
+                  <div class="dc-title dc-title-red">Delete account</div>
+                  <div class="dc-desc">Permanently delete your account and all data. This cannot be undone.</div>
+                </div>
+                <button class="btn-danger" (click)="showDeleteConfirm = true">Delete Account</button>
+              </div>
+            </div>
+  
+            <!-- Delete confirm modal -->
+            <div class="delete-overlay" [class.open]="showDeleteConfirm" (click)="showDeleteConfirm = false">
+              <div class="delete-modal" (click)="$event.stopPropagation()">
+                <div class="dm-icon">⚠️</div>
+                <h3 class="dm-title">Delete your account?</h3>
+                <p class="dm-body">This will permanently delete your profile, applications, and all saved data. This action cannot be undone.</p>
+                <div class="dm-actions">
+                  <button class="btn-cancel" (click)="showDeleteConfirm = false">Cancel</button>
+                  <button class="btn-danger" (click)="deleteAccount()">Yes, delete my account</button>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+        </div>
+      </div>
+    </div>
+  </div>

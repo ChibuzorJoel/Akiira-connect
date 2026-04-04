@@ -1,0 +1,169 @@
+<!-- src/app/pages/post-job/post-job.component.html -->
+<div class="pj-page">
+    <div class="pj-container">
+  
+      <!-- Success screen -->
+      <div class="pj-success" *ngIf="submitted">
+        <div class="ps-icon">🎉</div>
+        <h2 class="ps-title">Job Posted Successfully!</h2>
+        <p class="ps-sub">Your job listing for <strong>{{ f['jobTitle'].value }}</strong> at <strong>{{ f['company'].value }}</strong> is now live and visible to 320,000+ remote workers.</p>
+        <div class="ps-actions">
+          <a routerLink="/jobs" class="ps-btn-primary">View Job Listings</a>
+          <a routerLink="/dashboard" class="ps-btn-ghost">Go to Dashboard</a>
+        </div>
+      </div>
+  
+      <!-- Main form -->
+      <div *ngIf="!submitted">
+  
+        <!-- Header -->
+        <div class="pj-header">
+          <h1 class="pj-title">Post a Remote Job</h1>
+          <p class="pj-sub">Reach 320,000+ vetted remote freelancers and developers.</p>
+        </div>
+  
+        <!-- Step progress -->
+        <div class="pj-steps">
+          <div *ngFor="let s of steps" class="pjs-item" [class.active]="currentStep === s.n" [class.done]="currentStep > s.n">
+            <div class="pjs-circle">
+              <svg *ngIf="currentStep > s.n" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              <span *ngIf="currentStep <= s.n">{{ s.n }}</span>
+            </div>
+            <span class="pjs-label">{{ s.label }}</span>
+          </div>
+        </div>
+  
+        <form [formGroup]="form" novalidate>
+  
+          <!-- ══ STEP 1: Job Details ══ -->
+          <div class="pj-panel" *ngIf="currentStep === 1">
+            <div class="pjp-card">
+              <h2 class="pjp-title">Job Information</h2>
+  
+              <div class="form-grid-2">
+                <div class="form-row" [class.fe]="isInvalid('jobTitle')">
+                  <label class="form-label">Job title *</label>
+                  <input class="form-input" formControlName="jobTitle" placeholder="e.g. Senior React Developer"/>
+                  <span class="form-err" *ngIf="isInvalid('jobTitle')">Please enter a job title</span>
+                </div>
+                <div class="form-row" [class.fe]="isInvalid('company')">
+                  <label class="form-label">Company name *</label>
+                  <input class="form-input" formControlName="company" placeholder="e.g. Acme Corp"/>
+                  <span class="form-err" *ngIf="isInvalid('company')">Please enter a company name</span>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Category *</label>
+                  <select class="form-select" formControlName="category">
+                    <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Job type *</label>
+                  <select class="form-select" formControlName="jobType">
+                    <option *ngFor="let t of jobTypes" [value]="t">{{ t }}</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Location *</label>
+                  <select class="form-select" formControlName="location">
+                    <option *ngFor="let l of remoteOptions" [value]="l">{{ l }}</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">Salary range *</label>
+                  <div class="salary-row">
+                    <div class="salary-field" [class.fe]="isInvalid('salaryMin')">
+                      <span class="sf-prefix">$</span>
+                      <input class="form-input salary-input" formControlName="salaryMin" placeholder="80,000" type="number"/>
+                    </div>
+                    <span class="salary-sep">—</span>
+                    <div class="salary-field" [class.fe]="isInvalid('salaryMax')">
+                      <span class="sf-prefix">$</span>
+                      <input class="form-input salary-input" formControlName="salaryMax" placeholder="120,000" type="number"/>
+                    </div>
+                    <span class="salary-label">/ yr</span>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="form-row" [class.fe]="isInvalid('description')">
+                <label class="form-label">Job description * <span class="form-hint-inline">(min. 100 characters)</span></label>
+                <textarea class="form-textarea" formControlName="description" rows="7" placeholder="Describe the role, responsibilities, team culture, and what makes this opportunity exciting…"></textarea>
+                <div class="form-row-foot">
+                  <span class="form-err" *ngIf="isInvalid('description')">Description must be at least 100 characters</span>
+                  <span class="form-count">{{ f['description'].value?.length || 0 }} chars</span>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- ══ STEP 2: Requirements ══ -->
+          <div class="pj-panel" *ngIf="currentStep === 2">
+            <div class="pjp-card">
+              <h2 class="pjp-title">Requirements & Perks</h2>
+  
+              <div class="form-row" [class.fe]="isInvalid('requirements')">
+                <label class="form-label">Requirements * <span class="form-hint-inline">One per line</span></label>
+                <textarea class="form-textarea" formControlName="requirements" rows="6" placeholder="5+ years React experience&#10;Strong TypeScript skills&#10;Experience with GraphQL&#10;Excellent async communication"></textarea>
+              </div>
+  
+              <div class="form-row">
+                <label class="form-label">Nice to have <span class="form-hint-inline">Optional</span></label>
+                <textarea class="form-textarea" formControlName="niceToHave" rows="4" placeholder="Next.js experience&#10;Open source contributions&#10;Experience with design systems"></textarea>
+              </div>
+  
+              <div class="form-row">
+                <label class="form-label">Benefits & perks <span class="form-hint-inline">Optional — but highly recommended</span></label>
+                <textarea class="form-textarea" formControlName="benefits" rows="4" placeholder="Full health, dental & vision&#10;$2,500 annual learning budget&#10;Equity package&#10;Unlimited PTO&#10;$3,000 home office stipend"></textarea>
+              </div>
+            </div>
+          </div>
+  
+          <!-- ══ STEP 3: Preview ══ -->
+          <div class="pj-panel" *ngIf="currentStep === 3">
+            <div class="pjp-card preview-card">
+              <div class="prev-badge">Preview</div>
+              <h2 class="pjp-title">How your listing will look</h2>
+  
+              <div class="prev-job-card">
+                <div class="pjc-header">
+                  <div class="pjc-logo">{{ f['company'].value?.charAt(0) || '?' }}</div>
+                  <div>
+                    <div class="pjc-title">{{ f['jobTitle'].value || 'Job Title' }}</div>
+                    <div class="pjc-company">{{ f['company'].value || 'Company Name' }} · {{ f['location'].value }}</div>
+                  </div>
+                  <div class="pjc-salary">${{ f['salaryMin'].value | number }}–${{ f['salaryMax'].value | number }}</div>
+                </div>
+                <div class="pjc-tags">
+                  <span>{{ f['jobType'].value }}</span>
+                  <span>{{ f['category'].value }}</span>
+                  <span>Remote</span>
+                </div>
+                <div class="pjc-desc">{{ f['description'].value?.slice(0, 200) }}{{ (f['description'].value?.length > 200) ? '…' : '' }}</div>
+              </div>
+  
+              <div class="prev-info">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Your listing will be live immediately and visible to 320,000+ remote workers on Akiira Connect.
+              </div>
+            </div>
+          </div>
+  
+          <!-- Navigation -->
+          <div class="pj-nav">
+            <button type="button" class="pjn-back" *ngIf="currentStep > 1" (click)="prevStep()">← Back</button>
+            <div style="flex:1"></div>
+            <button type="button" class="pjn-next" *ngIf="currentStep < 3" (click)="nextStep()">
+              Continue → </button>
+            <button type="button" class="pjn-submit" *ngIf="currentStep === 3" (click)="submit()" [disabled]="isSubmitting">
+              <span *ngIf="!isSubmitting">🚀 Publish Job Listing</span>
+              <span *ngIf="isSubmitting" class="pjn-loader"><span class="spin"></span> Publishing…</span>
+            </button>
+          </div>
+  
+        </form>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,131 @@
+<!-- src/app/pages/pricing/pricing.component.html -->
+<div class="pricing-page">
+
+    <!-- Hero -->
+    <div class="pr-hero">
+      <div class="prh-bg">
+        <div class="prh-orb prh-orb-1"></div>
+        <div class="prh-orb prh-orb-2"></div>
+        <div class="prh-grid"></div>
+      </div>
+      <div class="pr-container">
+        <div class="prh-eyebrow">Simple, transparent pricing</div>
+        <h1 class="prh-title">Invest in your<br><span class="prh-accent">remote career</span></h1>
+        <p class="prh-sub">Start free. Upgrade when you're ready. Cancel any time.</p>
+  
+        <!-- Billing toggle -->
+        <div class="billing-toggle">
+          <span [class.bt-active]="!annual">Monthly</span>
+          <button class="bt-switch" (click)="toggleAnnual()" [class.annual]="annual">
+            <span class="bt-thumb"></span>
+          </button>
+          <span [class.bt-active]="annual">
+            Annual
+            <span class="bt-save">Save 40%</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Plans -->
+    <div class="pr-container pr-plans-wrap">
+      <div class="plans-grid">
+        <div
+          *ngFor="let plan of plans"
+          class="plan-card"
+          [class.plan-highlight]="plan.highlight"
+        >
+          <div class="pc-badge" *ngIf="plan.badge">{{ plan.badge }}</div>
+  
+          <div class="pc-top">
+            <div class="pc-icon">{{ plan.icon }}</div>
+            <div class="pc-name">{{ plan.name }}</div>
+            <div class="pc-price">
+              <span class="pc-amount">{{ price(plan) }}</span>
+              <span class="pc-per" *ngIf="plan.price.monthly > 0">/mo</span>
+            </div>
+            <div class="pc-billed" *ngIf="plan.price.monthly > 0 && annual">
+              Billed ${{ plan.price.annual * 12 }}/year
+            </div>
+            <p class="pc-desc">{{ plan.description }}</p>
+          </div>
+  
+          <button
+            class="pc-cta"
+            [class.pc-cta-highlight]="plan.highlight"
+            (click)="navigate(plan.ctaRoute)"
+          >{{ plan.cta }}</button>
+  
+          <div class="pc-features">
+            <div *ngFor="let f of plan.features" class="pcf-item" [class.pcf-off]="!f.included">
+              <span class="pcf-icon">{{ f.included ? '✓' : '×' }}</span>
+              {{ f.text }}
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Enterprise banner -->
+      <div class="enterprise-card">
+        <div class="ec-left">
+          <div class="ec-icon">🏢</div>
+          <div>
+            <div class="ec-title">Enterprise & Teams</div>
+            <div class="ec-sub">Custom plans for agencies, staffing firms, and large teams. Volume discounts, SSO, dedicated support, and custom integrations.</div>
+          </div>
+        </div>
+        <a routerLink="/contact" class="ec-btn">Contact Sales →</a>
+      </div>
+    </div>
+  
+    <!-- Comparison table -->
+    <div class="pr-container pr-compare">
+      <h2 class="compare-title">Full Feature Comparison</h2>
+      <div class="compare-table">
+        <div class="ct-head">
+          <div class="ct-feature-col">Feature</div>
+          <div class="ct-plan-col" *ngFor="let p of plans">{{ p.name }}</div>
+        </div>
+        <div class="ct-row" *ngFor="let feat of plans[2].features; let i = index">
+          <div class="ct-feature">{{ feat.text }}</div>
+          <div class="ct-cell" *ngFor="let p of plans">
+            <span *ngIf="p.features[i].included" class="ct-yes">✓</span>
+            <span *ngIf="!p.features[i].included" class="ct-no">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- FAQs -->
+    <div class="pr-container pr-faq">
+      <h2 class="faq-title">Frequently Asked Questions</h2>
+      <div class="faq-list">
+        <div *ngFor="let faq of faqs; let i = index" class="faq-item" [class.open]="openFaqs.has(i)">
+          <button class="faq-q" (click)="toggleFaq(i)">
+            <span>{{ faq.q }}</span>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" [class.rotated]="openFaqs.has(i)">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-a" *ngIf="openFaqs.has(i)">{{ faq.a }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Bottom CTA -->
+    <div class="pr-container pr-cta">
+      <div class="pr-cta-card">
+        <div class="prc-bg"></div>
+        <div class="prc-inner">
+          <h2 class="prc-title">Start for free today</h2>
+          <p class="prc-sub">Join 320,000+ remote workers who found their next role on Akiira Connect.</p>
+          <div class="prc-btns">
+            <a routerLink="/auth/register" class="prc-btn-primary">Get Started Free →</a>
+            <a routerLink="/jobs" class="prc-btn-ghost">Browse Jobs First</a>
+          </div>
+          <p class="prc-note">No credit card required · Cancel anytime · 14-day Pro trial included</p>
+        </div>
+      </div>
+    </div>
+  
+  </div>

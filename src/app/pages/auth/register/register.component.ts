@@ -1,18 +1,13 @@
-// src/app/features/auth/register/register.component.ts
+// src/app/pages/auth/register/register.component.ts
 import {
   Component, OnInit, OnDestroy,
   ChangeDetectionStrategy, ChangeDetectorRef
 } from '@angular/core';
-import { CommonModule }   from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import {
-  ReactiveFormsModule, FormBuilder, FormGroup,
-  Validators, AbstractControl, ValidationErrors
-} from '@angular/forms';
-import { Subject }        from 'rxjs';
+import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
-
-import { AuthService }    from '../../../shared/services/auth.service';
+import { AuthService } from '../../../shared/services/auth.service';
 import {
   strongPasswordValidator,
   passwordMatchValidator,
@@ -27,129 +22,146 @@ import {
 })
 export class RegisterComponent implements OnInit, OnDestroy {
 
-  form!: FormGroup;
-  isLoading     = false;
-  showPassword  = false;
-  showConfirm   = false;
-  serverError   = '';
-  currentStep   = 1;  // 1 = account type, 2 = details
+  currentStep   = 1;
   selectedRole: 'freelancer' | 'employer' = 'freelancer';
 
-  get passwordStrength() {
-    return getPasswordStrength(this.password?.value || '');
-  }
+  // Freelancer form
+  fForm!: FormGroup;
+  showFPw  = false;
+  showFCpw = false;
+
+  // Employer / company form
+  eForm!: FormGroup;
+  showEPw  = false;
+  showECpw = false;
+
+  isLoading   = false;
+  serverError = '';
 
   private destroy$ = new Subject<void>();
 
+  get pwStrength() {
+    const f = this.selectedRole === 'freelancer' ? this.fForm : this.eForm;
+    return getPasswordStrength(f?.get('password')?.value || '');
+  }
+
+  get pwReqs() {
+    const f = this.selectedRole === 'freelancer' ? this.fForm : this.eForm;
+    const v = f?.get('password')?.value || '';
+    return [
+      { label: '8+ characters', met: v.length >= 8 },
+      { label: 'Uppercase',     met: /[A-Z]/.test(v) },
+      { label: 'Lowercase',     met: /[a-z]/.test(v) },
+      { label: 'Number',        met: /[0-9]/.test(v) },
+    ];
+  }
+
+  readonly companySizes = [
+    '1–10 (Startup)','11–50','51–200','201–500','501–1,000','1,001–5,000','5,000+'
+  ];
+  readonly industries = [
+    'Technology','FinTech','Healthcare','E-Commerce','Education',
+    'Media & Entertainment','SaaS','AI / Machine Learning',
+    'Developer Tools','Design / Creative','Marketing','Other'
+  ];
+
   constructor(
-    private fb:    FormBuilder,
-    private auth:  AuthService,
+    private fb:     FormBuilder,
+    private auth:   AuthService,
     private router: Router,
     private cdr:    ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     if (this.auth.isLoggedIn) {
-      this.router.navigate(['/dashboard']);
+      const ob = localStorage.getItem('akiira_onboarded');
+      this.router.navigate([ob ? '/dashboard' : '/onboarding']);
       return;
     }
 
-    this.form = this.fb.group({
-      role:            ['freelancer', Validators.required],
-      fullName:        ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60)]],
+    this.fForm = this.fb.group({
+      fullName:        ['', [Validators.required, Validators.minLength(2)]],
       email:           ['', [Validators.required, Validators.email]],
       password:        ['', [Validators.required, strongPasswordValidator()]],
       confirmPassword: ['', [Validators.required, passwordMatchValidator('password')]],
       agreeToTerms:    [false, Validators.requiredTrue],
     });
 
-    // Re-validate confirmPassword whenever password changes
-    this.form.get('password')!.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.form.get('confirmPassword')!.updateValueAndValidity();
-        this.cdr.markForCheck();
-      });
+    this.eForm = this.fb.group({
+      companyName:     ['', [Validators.required, Validators.minLength(2)]],
+      contactName:     ['', [Validators.required, Validators.minLength(2)]],
+      workEmail:       ['', [Validators.required, Validators.email]],
+      companySize:     ['', Validators.required],
+      industry:        ['', Validators.required],
+      password:        ['', [Validators.required, strongPasswordValidator()]],
+      confirmPassword: ['', [Validators.required, passwordMatchValidator('password')]],
+      agreeToTerms:    [false, Validators.requiredTrue],
+    });
+
+    this.fForm.get('password')!.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => { this.fForm.get('confirmPassword')!.updateValueAndValidity(); this.cdr.markForCheck(); });
+
+    this.eForm.get('password')!.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => { this.eForm.get('confirmPassword')!.updateValueAndValidity(); this.cdr.markForCheck(); });
   }
 
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
 
-  // ── Getters ──────────────────────────────────
-  get fullName():        AbstractControl { return this.form.get('fullName')!; }
-  get email():           AbstractControl { return this.form.get('email')!; }
-  get password():        AbstractControl { return this.form.get('password')!; }
-  get confirmPassword(): AbstractControl { return this.form.get('confirmPassword')!; }
-  get agreeToTerms():    AbstractControl { return this.form.get('agreeToTerms')!; }
+  selectRole(r: 'freelancer' | 'employer'): void { this.selectedRole = r; this.cdr.markForCheck(); }
+  goStep2(): void { this.currentStep = 2; this.cdr.markForCheck(); }
+  goStep1(): void { this.currentStep = 1; this.cdr.markForCheck(); }
 
-  isFieldInvalid(field: string): boolean {
-    const c = this.form.get(field)!;
-    return c.touched && c.invalid;
-  }
+  inv(form: FormGroup, f: string): boolean { const c = form.get(f)!; return c.touched && c.invalid; }
+  ok (form: FormGroup, f: string): boolean { const c = form.get(f)!; return c.touched && c.valid && !!c.value; }
 
-  isFieldValid(field: string): boolean {
-    const c = this.form.get(field)!;
-    return c.touched && c.valid && c.value;
-  }
-
-  fieldError(field: string): string {
-    const c = this.form.get(field)!;
+  err(form: FormGroup, field: string): string {
+    const c = form.get(field)!;
     if (!c.touched || c.valid) return '';
-
-    const labels: Record<string, string> = {
-      fullName: 'Full name', email: 'Email',
-      password: 'Password', confirmPassword: 'Passwords',
-    };
-
-    if (c.hasError('required'))       return `${labels[field] || 'Field'} is required`;
-    if (c.hasError('email'))          return 'Please enter a valid email address';
-    if (c.hasError('minlength'))      return `${labels[field]} must be at least ${c.errors!['minlength'].requiredLength} characters`;
-    if (c.hasError('strongPassword')) return 'Password does not meet requirements';
+    if (c.hasError('required'))       return 'Required';
+    if (c.hasError('email'))          return 'Invalid email address';
+    if (c.hasError('minlength'))      return 'Too short';
+    if (c.hasError('strongPassword')) return 'Password too weak';
     if (c.hasError('passwordMatch'))  return 'Passwords do not match';
-    return 'Invalid value';
+    return 'Invalid';
   }
 
-  get passwordRequirements() {
-    const v = this.password?.value || '';
-    return [
-      { label: 'At least 8 characters', met: v.length >= 8 },
-      { label: 'One uppercase letter',  met: /[A-Z]/.test(v) },
-      { label: 'One lowercase letter',  met: /[a-z]/.test(v) },
-      { label: 'One number',            met: /[0-9]/.test(v) },
-    ];
+  submitFreelancer(): void {
+    this.fForm.markAllAsTouched();
+    if (this.fForm.invalid || this.isLoading) { this.cdr.markForCheck(); return; }
+    this.isLoading = true; this.serverError = ''; this.cdr.markForCheck();
+    this.auth.mockRegister({ ...this.fForm.value, role: 'freelancer' as const }).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
+    ).subscribe({
+      next:  () => this.router.navigate(['/onboarding']),
+      error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
+    });
   }
 
-  // ── Role selection ────────────────────────────
-  selectRole(role: 'freelancer' | 'employer'): void {
-    this.selectedRole = role;
-    this.form.patchValue({ role });
-    this.cdr.markForCheck();
-  }
-
-  // ── Step navigation ───────────────────────────
-  goToStep2(): void {
-    // Validate only role on step 1
-    this.currentStep = 2;
-    this.cdr.markForCheck();
-  }
-
-  // ── Submit ────────────────────────────────────
-  onSubmit(): void {
-    this.form.markAllAsTouched();
-    if (this.form.invalid || this.isLoading) return;
-
-    this.isLoading   = true;
-    this.serverError = '';
-    this.cdr.markForCheck();
-
-    this.auth.mockRegister(this.form.value)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
-      )
-      .subscribe({
-        next: () => this.router.navigate(['/dashboard']),
-        error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
-      });
+  submitEmployer(): void {
+    this.eForm.markAllAsTouched();
+    if (this.eForm.invalid || this.isLoading) { this.cdr.markForCheck(); return; }
+    this.isLoading = true; this.serverError = ''; this.cdr.markForCheck();
+    const ev = this.eForm.value;
+    this.auth.mockRegister({
+      fullName: ev.contactName, email: ev.workEmail,
+      password: ev.password,    confirmPassword: ev.confirmPassword,
+      role: 'employer' as const, agreeToTerms: ev.agreeToTerms,
+    }).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
+    ).subscribe({
+      next: () => {
+        // Store company info for the onboarding wizard
+        localStorage.setItem('akiira_company_reg', JSON.stringify({
+          companyName: ev.companyName,
+          companySize: ev.companySize,
+          industry:    ev.industry,
+        }));
+        this.router.navigate(['/company-onboarding']);
+      },
+      error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
+    });
   }
 
   loginWithGoogle(): void { this.auth.loginWithGoogle(); }
