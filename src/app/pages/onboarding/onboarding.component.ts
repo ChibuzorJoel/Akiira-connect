@@ -22,6 +22,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   saving      = false;
   newSkill    = '';
   skills: string[] = [];
+  errorMessage = '';
 
   // ── Forms per step ──────────────────────────────────────────
   step1!: FormGroup;
@@ -70,7 +71,6 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   get currentUser() { return this.auth.currentUser; }
 
-  // ✅ FIX ADDED HERE
   get firstName(): string {
     const name = this.currentUser?.fullName;
     return name ? name.split(' ')[0] : 'there';
@@ -100,7 +100,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
     this.step3 = this.fb.group({
       availability: ['immediate', Validators.required],
-      hourlyRate: ['', Validators.required],
+      hourlyRate: ['', [Validators.required, Validators.min(10)]],
       category: ['Engineering', Validators.required],
       remoteOnly: [true],
     });
@@ -119,7 +119,10 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     const form = this.currentForm();
     if (form) {
       form.markAllAsTouched();
-      if (form.invalid) { this.cdr.markForCheck(); return; }
+      if (form.invalid) { 
+        this.cdr.markForCheck(); 
+        return; 
+      }
     }
     if (this.currentStep < this.totalSteps) {
       this.currentStep++;
@@ -181,49 +184,102 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // ✅ UPDATED: Complete onboarding with backend API
   complete(): void {
+    // Validate skills
     if (this.skills.length === 0) {
-      this.showSaved('Please add at least one skill.');
+      this.showSaved('Please add at least one skill.', 'error');
+      return;
+    }
+
+    // Validate hourly rate
+    if (!this.step3.value.hourlyRate || this.step3.value.hourlyRate < 10) {
+      this.showSaved('Please enter a valid hourly rate (minimum $10).', 'error');
       return;
     }
 
     this.saving = true;
+    this.errorMessage = '';
     this.cdr.markForCheck();
 
-    this.profileSvc.update({
+    // Prepare profile data for backend
+    const profileData = {
       headline: this.step1.value.headline,
       bio: this.step2.value.bio,
-      phone: this.step1.value.phone,
       location: this.step1.value.location,
+      phone: this.step1.value.phone,
+      skills: this.skills,
+      availability: this.step3.value.availability,
+      hourlyRate: this.step3.value.hourlyRate,
+      jobTypes: this.selectedJobTypes,
+      remoteOnly: this.step3.value.remoteOnly,
       website: this.step4.value.website,
       github: this.step4.value.github,
       linkedin: this.step4.value.linkedin,
-      skills: this.skills,
-      availability: this.step3.value.availability,
-      hourlyRate: '$' + this.step3.value.hourlyRate,
-      jobTypes: this.selectedJobTypes,
-      remoteOnly: this.step3.value.remoteOnly,
+      twitter: this.step4.value.twitter
+    };
+
+    // Step 1: Update profile via backend API
+    this.auth.updateFreelancerProfile(profileData).subscribe({
+      next: () => {
+        // Step 2: Mark onboarding as complete
+        this.auth.completeOnboarding().subscribe({
+          next: () => {
+            // Also update local profile service for backward compatibility
+            this.profileSvc.update(profileData);
+            
+            this.saving = false;
+            this.showSaved('Profile completed successfully! Redirecting...', 'success');
+            
+            setTimeout(() => {
+              this.router.navigate(['/dashboard']);
+            }, 1500);
+          },
+          error: (error) => {
+            console.error('Error completing onboarding:', error);
+            this.saving = false;
+            this.showSaved(error || 'Error completing onboarding. Please try again.', 'error');
+            this.cdr.markForCheck();
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error saving profile:', error);
+        this.saving = false;
+        this.showSaved(error || 'Error saving profile. Please try again.', 'error');
+        this.cdr.markForCheck();
+      }
     });
-
-    localStorage.setItem('akiira_onboarded', 'true');
-
-    setTimeout(() => {
-      this.saving = false;
-      this.cdr.markForCheck();
-      this.router.navigate(['/dashboard']);
-    }, 1400);
   }
 
+  // ✅ UPDATED: Skip onboarding
   skip(): void {
-    localStorage.setItem('akiira_onboarded', 'true');
-    this.router.navigate(['/dashboard']);
+    if (confirm('Are you sure you want to skip? You can complete your profile later from your dashboard.')) {
+      this.saving = true;
+      
+      this.auth.completeOnboarding().subscribe({
+        next: () => {
+          this.saving = false;
+          this.router.navigate(['/dashboard']);
+        },
+        error: (error) => {
+          console.error('Error skipping onboarding:', error);
+          this.saving = false;
+          this.showSaved('Error. Please try again.', 'error');
+        }
+      });
+    }
   }
 
-  private showSaved(msg: string): void {
+  // ✅ UPDATED: Show success or error message
+  private showSaved(msg: string, type: 'success' | 'error' = 'success'): void {
     this.saveSuccess = msg;
+    this.errorMessage = type === 'error' ? msg : '';
     this.cdr.markForCheck();
+    
     setTimeout(() => {
       this.saveSuccess = '';
+      this.errorMessage = '';
       this.cdr.markForCheck();
     }, 3000);
   }

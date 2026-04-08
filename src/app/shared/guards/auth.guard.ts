@@ -31,9 +31,12 @@ export const authGuard: CanActivateFn = (route, state) => {
   }
 
   // 2. Logged in but haven't finished onboarding → correct wizard
-  const onboarded = localStorage.getItem('akiira_onboarded');
-  if (!onboarded) {
-    router.navigate([onboardingFor(auth.currentUser?.role)]);
+  // ✅ FIXED: Use onboarded from user object, not localStorage
+  const user = auth.currentUser;
+  const isOnboarded = user?.onboarded === true;
+  
+  if (!isOnboarded) {
+    router.navigate([onboardingFor(user?.role)]);
     return false;
   }
 
@@ -49,18 +52,17 @@ export const guestGuard: CanActivateFn = () => {
   // Not logged in → let them through
   if (!auth.isLoggedIn) return true;
 
-  const onboarded = localStorage.getItem('akiira_onboarded');
-  const role      = auth.currentUser?.role;
+  const user = auth.currentUser;
+  const isOnboarded = user?.onboarded === true;
+  const role = user?.role;
 
   // Logged in but not onboarded → correct wizard
-  if (!onboarded) {
+  if (!isOnboarded) {
     router.navigate([onboardingFor(role)]);
     return false;
   }
 
   // Fully onboarded → correct dashboard
-  //   freelancer → /dashboard
-  //   employer   → /employer-dashboard
   router.navigate([dashboardFor(role)]);
   return false;
 };
@@ -79,9 +81,11 @@ export const onboardingGuard: CanActivateFn = () => {
   }
 
   // Already onboarded → correct dashboard
-  const onboarded = localStorage.getItem('akiira_onboarded');
-  if (onboarded) {
-    router.navigate([dashboardFor(auth.currentUser?.role)]);
+  const user = auth.currentUser;
+  const isOnboarded = user?.onboarded === true;
+  
+  if (isOnboarded) {
+    router.navigate([dashboardFor(user?.role)]);
     return false;
   }
 

@@ -75,8 +75,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Already logged in → redirect to correct place
     if (this.auth.isLoggedIn) {
-      const onboarded = localStorage.getItem('akiira_onboarded');
-      const role      = this.auth.currentUser?.role;
+      const user = this.auth.currentUser;
+      const onboarded = user?.onboarded;
+      const role = user?.role;
       if (!onboarded) {
         this.router.navigate([role === 'employer' ? '/company-onboarding' : '/onboarding']);
       } else {
@@ -134,27 +135,27 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   // ── FREELANCER SUBMIT ────────────────────────────────────────
-  // Registers → saves role as 'freelancer' → navigates to /onboarding
+  // ✅ CHANGED: mockRegister → register (real backend)
   submitFreelancer(): void {
     this.fForm.markAllAsTouched();
     if (this.fForm.invalid || this.isLoading) { this.cdr.markForCheck(); return; }
 
     this.isLoading = true; this.serverError = ''; this.cdr.markForCheck();
 
-    this.auth.mockRegister({
+    this.auth.register({
       ...this.fForm.value,
       role: 'freelancer' as const,
     }).pipe(
       takeUntil(this.destroy$),
       finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
     ).subscribe({
-      next:  () => this.router.navigate(['/onboarding']),       // ← freelancer wizard
+      next:  () => this.router.navigate(['/onboarding']),
       error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
     });
   }
 
   // ── EMPLOYER SUBMIT ──────────────────────────────────────────
-  // Registers → saves role as 'employer' → navigates to /company-onboarding
+  // ✅ CHANGED: mockRegister → register (real backend)
   submitEmployer(): void {
     this.eForm.markAllAsTouched();
     if (this.eForm.invalid || this.isLoading) { this.cdr.markForCheck(); return; }
@@ -163,12 +164,12 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
     const ev = this.eForm.value;
 
-    this.auth.mockRegister({
+    this.auth.register({
       fullName:        ev.contactName,
       email:           ev.workEmail,
       password:        ev.password,
       confirmPassword: ev.confirmPassword,
-      role:            'employer' as const,          // ← role stored in registry
+      role:            'employer' as const,
       agreeToTerms:    ev.agreeToTerms,
       companyName:     ev.companyName,
       companySize:     ev.companySize,
@@ -184,7 +185,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
           companySize: ev.companySize,
           industry:    ev.industry,
         }));
-        this.router.navigate(['/company-onboarding']);           // ← employer wizard
+        this.router.navigate(['/company-onboarding']);
       },
       error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
     });

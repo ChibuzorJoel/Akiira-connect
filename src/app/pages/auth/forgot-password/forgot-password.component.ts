@@ -39,6 +39,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   otpError     = '';
   resendCooldown = 0;
   private resendTimer!: ReturnType<typeof setInterval>;
+  private resetToken = ''; // Store reset token from backend
 
   // ── Password visibility ──────────────────────
   showPassword  = false;
@@ -120,7 +121,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     clearInterval(this.resendTimer);
   }
 
-  // ── STEP 1: Send email ───────────────────────
+  // ── STEP 1: Send email (REAL BACKEND) ───────────────────────
   onSendEmail(): void {
     this.emailForm.markAllAsTouched();
     if (this.emailForm.invalid || this.isLoading) return;
@@ -129,17 +130,25 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     this.serverError = '';
     this.cdr.markForCheck();
 
-    // Mock API call — replace with: this.authService.forgotPassword(email)
-    setTimeout(() => {
-      this.sentEmail   = this.emailForm.value.email;
-      this.isLoading   = false;
-      this.currentStep = 'otp';
-      this.startResendCooldown();
-      this.cdr.markForCheck();
-    }, 1400);
+    const email = this.emailForm.value.email;
+
+    this.auth.forgotPassword(email).subscribe({
+      next: () => {
+        this.sentEmail = email;
+        this.isLoading = false;
+        this.currentStep = 'otp';
+        this.startResendCooldown();
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.serverError = error || 'Failed to send reset code. Please try again.';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  // ── STEP 2: Verify OTP ───────────────────────
+  // ── STEP 2: Verify OTP (REAL BACKEND) ───────────────────────
   get fullOtp(): string { return this.otpDigits.join(''); }
 
   onOtpInput(event: Event, index: number): void {
@@ -206,34 +215,44 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     this.otpError  = '';
     this.cdr.markForCheck();
 
-    // Mock OTP verify — replace with: this.authService.verifyOtp(this.sentEmail, this.fullOtp)
-    // Mock: any 6-digit code works in dev. Real: check against server.
-    setTimeout(() => {
-      this.isLoading = false;
-      if (this.fullOtp === '000000') {
-        // Simulate wrong code
-        this.otpError = 'Incorrect code. Please try again or request a new one.';
+    this.auth.verifyOtp(this.sentEmail, this.fullOtp).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        // Store reset token if returned
+        this.resetToken = response.resetToken || '';
+        this.currentStep = 'reset';
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.otpError = error || 'Incorrect code. Please try again or request a new one.';
         this.otpDigits = ['', '', '', '', '', ''];
         this.focusOtpField(0);
-      } else {
-        this.currentStep = 'reset';
+        this.cdr.markForCheck();
       }
-      this.cdr.markForCheck();
-    }, 1200);
+    });
   }
 
   resendCode(): void {
     if (this.resendCooldown > 0) return;
+    
     this.isLoading = true;
     this.otpDigits = ['', '', '', '', '', ''];
     this.otpError  = '';
     this.cdr.markForCheck();
 
-    setTimeout(() => {
-      this.isLoading = false;
-      this.startResendCooldown();
-      this.cdr.markForCheck();
-    }, 1000);
+    this.auth.forgotPassword(this.sentEmail).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.startResendCooldown();
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.otpError = error || 'Failed to resend code. Please try again.';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   private startResendCooldown(): void {
@@ -246,7 +265,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  // ── STEP 3: Reset password ───────────────────
+  // ── STEP 3: Reset password (REAL BACKEND) ───────────────────
   onResetPassword(): void {
     this.resetForm.markAllAsTouched();
     if (this.resetForm.invalid || this.isLoading) return;
@@ -255,12 +274,20 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     this.serverError = '';
     this.cdr.markForCheck();
 
-    // Mock reset — replace with: this.authService.resetPassword(this.sentEmail, this.fullOtp, newPassword)
-    setTimeout(() => {
-      this.isLoading   = false;
-      this.currentStep = 'success';
-      this.cdr.markForCheck();
-    }, 1400);
+    const newPassword = this.resetForm.value.password;
+
+    this.auth.resetPassword(this.sentEmail, newPassword).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.currentStep = 'success';
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.serverError = error || 'Failed to reset password. Please try again.';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   // ── Helpers ──────────────────────────────────
@@ -291,12 +318,15 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     return `${masked}@${domain}`;
   }
 
-  goToLogin(): void { this.router.navigate(['/auth/login']); }
+  goToLogin(): void { 
+    this.router.navigate(['/auth/login']); 
+  }
 
   changeEmail(): void {
     this.currentStep = 'email';
     this.otpDigits   = ['', '', '', '', '', ''];
     this.otpError    = '';
+    this.resetToken  = '';
     clearInterval(this.resendTimer);
     this.resendCooldown = 0;
     this.cdr.markForCheck();

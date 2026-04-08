@@ -101,11 +101,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.serverError = '';
     this.cdr.markForCheck();
 
-    this.auth.mockLogin(this.form.value).pipe(
+    // ✅ CHANGED: mockLogin → login (real backend)
+    this.auth.login(this.form.value).pipe(
       takeUntil(this.destroy$),
       finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
     ).subscribe({
-      next: () => {
+      next: (response) => {
         // Use returnUrl only if safe (not an auth page)
         if (this.returnUrl && this.returnUrl.startsWith('/') && !this.returnUrl.startsWith('/auth')) {
           this.router.navigateByUrl(this.returnUrl);
@@ -123,18 +124,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   loginWithGoogle(): void { this.auth.loginWithGoogle(); }
 
   // ── Role-based redirect ──────────────────────────────────────
-  // ┌───────────────────────────────────────────────────────────┐
-  // │ Not onboarded?                                            │
-  // │   employer   → /company-onboarding                       │
-  // │   freelancer → /onboarding                               │
-  // │                                                           │
-  // │ Onboarded?                                                │
-  // │   employer   → /employer-dashboard   🏢                   │
-  // │   freelancer → /dashboard            🧑‍💻                   │
-  // └───────────────────────────────────────────────────────────┘
   private _redirectByRole(): void {
-    const user      = this.auth.currentUser;
-    const onboarded = localStorage.getItem('akiira_onboarded');
+    const user = this.auth.currentUser;
+    // ✅ CHANGED: Use user.onboarded from backend instead of localStorage flag
+    const onboarded = user?.onboarded;
     const isEmployer = user?.role === 'employer';
 
     if (!onboarded) {

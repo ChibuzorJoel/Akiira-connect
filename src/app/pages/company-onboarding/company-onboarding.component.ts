@@ -19,6 +19,7 @@ export class CompanyOnboardingComponent implements OnInit, OnDestroy {
   totalSteps  = 4;
   saving      = false;
   saveSuccess = '';
+  errorMessage = '';
 
   // Pre-filled from registration
   prefilledCompany = '';
@@ -148,49 +149,108 @@ export class CompanyOnboardingComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  // ── Complete ─────────────────────────────────────────────────
+  // ── Complete Onboarding with Backend API ────────────────────
   complete(): void {
+    // Validate hiring roles
+    if (this.hiringRoles.length === 0) {
+      this.showSaved('Please add at least one hiring role.', 'error');
+      return;
+    }
+
     this.saving = true;
+    this.errorMessage = '';
     this.cdr.markForCheck();
 
-    // Store company profile data
-    const profile = {
-      companyName:   this.step1.value.companyName,
-      tagline:       this.step1.value.tagline,
-      website:       this.step1.value.website,
-      companySize:   this.step1.value.companySize,
-      industry:      this.step1.value.industry,
-      founded:       this.step1.value.founded,
-      location:      this.step1.value.location,
-      description:   this.step2.value.description,
-      mission:       this.step2.value.mission,
-      culture:       this.step2.value.culture,
-      hiringVolume:  this.step3.value.hiringVolume,
-      budgetRange:   this.step3.value.budgetRange,
-      remotePolicy:  this.step3.value.remotePolicy,
+    // Prepare company profile data for backend
+    const profileData = {
+      companyWebsite: this.step1.value.website,
+      companyDescription: this.step2.value.description,
+      headquarters: this.step1.value.location,
+      foundedYear: this.step1.value.founded ? parseInt(this.step1.value.founded) : undefined,
+      hiringRoles: this.hiringRoles,
+      remotePolicy: this.step3.value.remotePolicy,
+      companySize: this.step1.value.companySize,
+      industry: this.step1.value.industry,
+      // Additional fields
+      tagline: this.step1.value.tagline,
+      mission: this.step2.value.mission,
+      culture: this.step2.value.culture,
+      hiringVolume: this.step3.value.hiringVolume,
+      budgetRange: this.step3.value.budgetRange,
       contractTypes: this.selectedContractTypes,
-      hiringRoles:   this.hiringRoles,
-      linkedin:      this.step4.value.linkedin,
-      twitter:       this.step4.value.twitter,
-      github:        this.step4.value.github,
-      glassdoor:     this.step4.value.glassdoor,
+      linkedin: this.step4.value.linkedin,
+      twitter: this.step4.value.twitter,
+      github: this.step4.value.github,
+      glassdoor: this.step4.value.glassdoor
     };
 
-    localStorage.setItem('akiira_company_profile', JSON.stringify(profile));
-    localStorage.setItem('akiira_onboarded', 'true');
-    localStorage.removeItem('akiira_company_reg');
-
-    setTimeout(() => {
-      this.saving = false;
-      this.cdr.markForCheck();
-      this.router.navigate(['/dashboard']);
-    }, 1500);
+    // Step 1: Update employer profile via backend API
+    this.auth.updateEmployerProfile(profileData).subscribe({
+      next: () => {
+        // Step 2: Mark onboarding as complete
+        this.auth.completeOnboarding().subscribe({
+          next: () => {
+            // Store in localStorage as backup (optional)
+            localStorage.setItem('akiira_company_profile', JSON.stringify(profileData));
+            localStorage.removeItem('akiira_company_reg');
+            
+            this.saving = false;
+            this.showSaved('Company profile completed successfully! Redirecting...', 'success');
+            
+            setTimeout(() => {
+              this.router.navigate(['/employer-dashboard']);
+            }, 1500);
+          },
+          error: (error) => {
+            console.error('Error completing company onboarding:', error);
+            this.saving = false;
+            this.showSaved(error || 'Error completing onboarding. Please try again.', 'error');
+            this.cdr.markForCheck();
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error saving company profile:', error);
+        this.saving = false;
+        this.showSaved(error || 'Error saving company profile. Please try again.', 'error');
+        this.cdr.markForCheck();
+      }
+    });
   }
 
+  // ── Skip Onboarding ─────────────────────────────────────────
   skip(): void {
-    localStorage.setItem('akiira_onboarded', 'true');
-    this.router.navigate(['/dashboard']);
+    if (confirm('Are you sure you want to skip? You can complete your company profile later from your dashboard.')) {
+      this.saving = true;
+      
+      this.auth.completeOnboarding().subscribe({
+        next: () => {
+          this.saving = false;
+          this.router.navigate(['/employer-dashboard']);
+        },
+        error: (error) => {
+          console.error('Error skipping company onboarding:', error);
+          this.saving = false;
+          this.showSaved('Error. Please try again.', 'error');
+        }
+      });
+    }
   }
 
-  get descLength(): number { return this.step2?.get('description')?.value?.length || 0; }
+  // ── Helper Methods ──────────────────────────────────────────
+  private showSaved(msg: string, type: 'success' | 'error' = 'success'): void {
+    this.saveSuccess = msg;
+    this.errorMessage = type === 'error' ? msg : '';
+    this.cdr.markForCheck();
+    
+    setTimeout(() => {
+      this.saveSuccess = '';
+      this.errorMessage = '';
+      this.cdr.markForCheck();
+    }, 3000);
+  }
+
+  get descLength(): number { 
+    return this.step2?.get('description')?.value?.length || 0; 
+  }
 }

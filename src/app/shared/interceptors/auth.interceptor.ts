@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import {
   HttpInterceptor,
@@ -18,7 +17,8 @@ export class authInterceptor implements HttpInterceptor {
   constructor(private auth: AuthService, private router: Router) {}
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    const token = this.auth.token;
+    // ✅ FIXED: Use getToken() method instead of token property
+    const token = this.auth.getToken();
     const authReq = token
       ? req.clone({ setHeaders: { Authorization: 'Bearer ' + token } })
       : req;
