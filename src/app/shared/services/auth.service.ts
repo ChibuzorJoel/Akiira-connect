@@ -26,7 +26,7 @@ const USER_KEY  = 'akiira_user';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private API_URL = 'http://localhost:5000/api/auth';
+  private API_URL = 'https://akiira-connect-backend.onrender.com/api/auth';
   
   private _user$ = new BehaviorSubject<AuthUser | null>(null);
   readonly user$ = this._user$.asObservable();
