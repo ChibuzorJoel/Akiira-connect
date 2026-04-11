@@ -1,6 +1,6 @@
 // src/app/pages/auth/register/register.component.ts
 import {
-  Component, OnInit, OnDestroy,
+  Component, OnInit, OnDestroy, AfterViewInit,
   ChangeDetectionStrategy, ChangeDetectorRef
 } from '@angular/core';
 import { Router } from '@angular/router';
@@ -14,13 +14,15 @@ import {
   getPasswordStrength,
 } from '../../../shared/validators/auth.validators';
 
+declare const google: any; // Declare Google SDK
+
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RegisterComponent implements OnInit, OnDestroy {
+export class RegisterComponent implements OnInit, OnDestroy, AfterViewInit {
 
   currentStep   = 1;
   selectedRole: 'freelancer' | 'employer' = 'freelancer';
@@ -114,14 +116,126 @@ export class RegisterComponent implements OnInit, OnDestroy {
       .subscribe(() => { this.eForm.get('confirmPassword')!.updateValueAndValidity(); this.cdr.markForCheck(); });
   }
 
-  ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
+  ngAfterViewInit(): void {
+    this.initializeGoogleSignIn();
+  }
 
-  selectRole(r: 'freelancer' | 'employer'): void { this.selectedRole = r; this.cdr.markForCheck(); }
-  goStep2(): void { this.currentStep = 2; this.cdr.markForCheck(); }
-  goStep1(): void { this.currentStep = 1; this.cdr.markForCheck(); }
+  ngOnDestroy(): void { 
+    this.destroy$.next(); 
+    this.destroy$.complete(); 
+  }
 
-  inv(form: FormGroup, f: string): boolean { const c = form.get(f)!; return c.touched && c.invalid; }
-  ok (form: FormGroup, f: string): boolean { const c = form.get(f)!; return c.touched && c.valid && !!c.value; }
+  // ── GOOGLE SIGN-IN ──────────────────────────────────────────
+  initializeGoogleSignIn(): void {
+    if (typeof google !== 'undefined') {
+      google.accounts.id.initialize({
+        client_id: "989749842775-md48k004dh1on5v4tjthf9j3h0emjbop.apps.googleusercontent.com", // Replace with your Client ID
+        callback: (response: any) => this.handleGoogleSignIn(response),
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+      
+      // Render the Google button
+      const googleBtn = document.getElementById('google-btn');
+      if (googleBtn) {
+        google.accounts.id.renderButton(
+          googleBtn,
+          { 
+            theme: 'outline', 
+            size: 'large',
+            width: '100%',
+            text: 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left'
+          }
+        );
+      }
+    } else {
+      // If SDK not loaded yet, retry
+      setTimeout(() => this.initializeGoogleSignIn(), 500);
+    }
+  }
+
+  async handleGoogleSignIn(response: any): Promise<void> {
+    this.isLoading = true;
+    this.serverError = '';
+    this.cdr.markForCheck();
+    
+    try {
+      // Decode the JWT token from Google
+      const decodedToken = JSON.parse(atob(response.credential.split('.')[1]));
+      
+      console.log('Google user registration:', decodedToken);
+      
+      // Send to backend
+      this.auth.loginWithGoogle({
+        email: decodedToken.email,
+        fullName: decodedToken.name,
+        googleId: decodedToken.sub,
+        picture: decodedToken.picture
+      }).subscribe({
+        next: (result) => {
+          this.isLoading = false;
+          
+          // Redirect based on role and onboarded status
+          const onboarded = result.user?.onboarded;
+          const role = result.user?.role;
+          
+          if (!onboarded) {
+            this.router.navigate([role === 'employer' ? '/company-onboarding' : '/onboarding']);
+          } else {
+            this.router.navigate([role === 'employer' ? '/employer-dashboard' : '/dashboard']);
+          }
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.serverError = error.message || 'Google sign in failed. Please try again.';
+          this.cdr.markForCheck();
+        }
+      });
+      
+    } catch (error) {
+      this.isLoading = false;
+      this.serverError = 'Invalid Google response. Please try again.';
+      this.cdr.markForCheck();
+    }
+  }
+
+  loginWithGoogle(): void {
+    if (typeof google !== 'undefined') {
+      // Show the Google One-Tap UI or trigger the popup
+      google.accounts.id.prompt();
+    } else {
+      this.serverError = 'Google Sign-In is loading. Please try again.';
+      this.cdr.markForCheck();
+    }
+  }
+
+  selectRole(r: 'freelancer' | 'employer'): void { 
+    this.selectedRole = r; 
+    this.cdr.markForCheck(); 
+  }
+  
+  goStep2(): void { 
+    this.currentStep = 2; 
+    this.cdr.markForCheck(); 
+  }
+  
+  goStep1(): void { 
+    this.currentStep = 1; 
+    this.cdr.markForCheck(); 
+  }
+
+  inv(form: FormGroup, f: string): boolean { 
+    const c = form.get(f)!; 
+    return c.touched && c.invalid; 
+  }
+  
+  ok(form: FormGroup, f: string): boolean { 
+    const c = form.get(f)!; 
+    return c.touched && c.valid && !!c.value; 
+  }
 
   err(form: FormGroup, field: string): string {
     const c = form.get(field)!;
@@ -135,32 +249,46 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   // ── FREELANCER SUBMIT ────────────────────────────────────────
-  // ✅ CHANGED: mockRegister → register (real backend)
   submitFreelancer(): void {
     this.fForm.markAllAsTouched();
-    if (this.fForm.invalid || this.isLoading) { this.cdr.markForCheck(); return; }
+    if (this.fForm.invalid || this.isLoading) { 
+      this.cdr.markForCheck(); 
+      return; 
+    }
 
-    this.isLoading = true; this.serverError = ''; this.cdr.markForCheck();
+    this.isLoading = true; 
+    this.serverError = ''; 
+    this.cdr.markForCheck();
 
     this.auth.register({
       ...this.fForm.value,
       role: 'freelancer' as const,
     }).pipe(
       takeUntil(this.destroy$),
-      finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
+      finalize(() => { 
+        this.isLoading = false; 
+        this.cdr.markForCheck(); 
+      })
     ).subscribe({
-      next:  () => this.router.navigate(['/onboarding']),
-      error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
+      next: () => this.router.navigate(['/onboarding']),
+      error: (msg: string) => { 
+        this.serverError = msg; 
+        this.cdr.markForCheck(); 
+      },
     });
   }
 
   // ── EMPLOYER SUBMIT ──────────────────────────────────────────
-  // ✅ CHANGED: mockRegister → register (real backend)
   submitEmployer(): void {
     this.eForm.markAllAsTouched();
-    if (this.eForm.invalid || this.isLoading) { this.cdr.markForCheck(); return; }
+    if (this.eForm.invalid || this.isLoading) { 
+      this.cdr.markForCheck(); 
+      return; 
+    }
 
-    this.isLoading = true; this.serverError = ''; this.cdr.markForCheck();
+    this.isLoading = true; 
+    this.serverError = ''; 
+    this.cdr.markForCheck();
 
     const ev = this.eForm.value;
 
@@ -176,10 +304,12 @@ export class RegisterComponent implements OnInit, OnDestroy {
       industry:        ev.industry,
     }).pipe(
       takeUntil(this.destroy$),
-      finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
+      finalize(() => { 
+        this.isLoading = false; 
+        this.cdr.markForCheck(); 
+      })
     ).subscribe({
       next: () => {
-        // Stash company info for the wizard to pre-fill
         localStorage.setItem('akiira_company_reg', JSON.stringify({
           companyName: ev.companyName,
           companySize: ev.companySize,
@@ -187,9 +317,10 @@ export class RegisterComponent implements OnInit, OnDestroy {
         }));
         this.router.navigate(['/company-onboarding']);
       },
-      error: (msg: string) => { this.serverError = msg; this.cdr.markForCheck(); },
+      error: (msg: string) => { 
+        this.serverError = msg; 
+        this.cdr.markForCheck(); 
+      },
     });
   }
-
-  loginWithGoogle(): void { this.auth.loginWithGoogle(); }
 }

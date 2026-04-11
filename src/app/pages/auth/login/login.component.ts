@@ -1,6 +1,6 @@
 // src/app/pages/auth/login/login.component.ts
 import {
-  Component, OnInit, OnDestroy,
+  Component, OnInit, OnDestroy, AfterViewInit,
   ChangeDetectionStrategy, ChangeDetectorRef
 } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -9,13 +9,15 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { AuthService } from '../../../shared/services/auth.service';
 
+declare const google: any; // Declare Google SDK
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginComponent implements OnInit, OnDestroy {
+export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
 
   form!:            FormGroup;
   isLoading       = false;
@@ -63,10 +65,84 @@ export class LoginComponent implements OnInit, OnDestroy {
     }, 5000);
   }
 
+  ngAfterViewInit(): void {
+    this.initializeGoogleSignIn();
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     clearInterval(this.ticker);
+  }
+
+  initializeGoogleSignIn(): void {
+    if (typeof google !== 'undefined') {
+      google.accounts.id.initialize({
+        client_id: "989749842775-md48k004dh1on5v4tjthf9j3h0emjbop.apps.googleusercontent.com",
+        callback: (response: any) => this.handleGoogleSignIn(response),
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        use_fedcm_for_prompt: false
+      });
+      
+      const googleBtn = document.getElementById('google-btn');
+      if (googleBtn) {
+        google.accounts.id.renderButton(
+          googleBtn,
+          { 
+            theme: 'outline', 
+            size: 'large',
+            width: '100%',
+            text: 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left'
+          }
+        );
+      }
+    } else {
+      setTimeout(() => this.initializeGoogleSignIn(), 500);
+    }
+  }
+
+  handleGoogleSignIn(response: any): void {
+    this.isLoading = true;
+    this.serverError = '';
+    this.cdr.markForCheck();
+    
+    try {
+      const decodedToken = JSON.parse(atob(response.credential.split('.')[1]));
+      
+      console.log('Google user:', decodedToken);
+      
+      this.auth.loginWithGoogle({
+        email: decodedToken.email,
+        fullName: decodedToken.name,
+        googleId: decodedToken.sub,
+        picture: decodedToken.picture
+      }).subscribe({
+        next: (result) => {
+          this.isLoading = false;
+          console.log('Login result:', result);
+          
+          // ✅ ADDED: Redirect logic
+          if (this.returnUrl && this.returnUrl.startsWith('/') && !this.returnUrl.startsWith('/auth')) {
+            this.router.navigateByUrl(this.returnUrl);
+          } else {
+            this._redirectByRole();
+          }
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.serverError = error.message || 'Google sign in failed';
+          this.cdr.markForCheck();
+        }
+      });
+    } catch (error) {
+      this.isLoading = false;
+      this.serverError = 'Invalid Google response';
+      this.cdr.markForCheck();
+    }
   }
 
   // ── Field helpers ────────────────────────────────────────────
@@ -101,13 +177,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.serverError = '';
     this.cdr.markForCheck();
 
-    // ✅ CHANGED: mockLogin → login (real backend)
     this.auth.login(this.form.value).pipe(
       takeUntil(this.destroy$),
       finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
     ).subscribe({
       next: (response) => {
-        // Use returnUrl only if safe (not an auth page)
         if (this.returnUrl && this.returnUrl.startsWith('/') && !this.returnUrl.startsWith('/auth')) {
           this.router.navigateByUrl(this.returnUrl);
           return;
@@ -121,12 +195,9 @@ export class LoginComponent implements OnInit, OnDestroy {
     });
   }
 
-  loginWithGoogle(): void { this.auth.loginWithGoogle(); }
-
   // ── Role-based redirect ──────────────────────────────────────
   private _redirectByRole(): void {
     const user = this.auth.currentUser;
-    // ✅ CHANGED: Use user.onboarded from backend instead of localStorage flag
     const onboarded = user?.onboarded;
     const isEmployer = user?.role === 'employer';
 

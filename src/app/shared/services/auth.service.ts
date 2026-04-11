@@ -2,6 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // BACKEND INTEGRATION Node.js + MongoDB Atlas
 // ─────────────────────────────────────────────────────────────────────────────
+import { environment } from '../../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -26,7 +27,7 @@ const USER_KEY  = 'akiira_user';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private API_URL = 'https://akiira-connect.onrender.com/api/auth';
+  private API_URL = environment.apiUrl;
   
   private _user$ = new BehaviorSubject<AuthUser | null>(null);
   readonly user$ = this._user$.asObservable();
@@ -186,6 +187,16 @@ export class AuthService {
     remotePolicy?: string;
     companySize?: string;
     industry?: string;
+    tagline?: string;
+    mission?: string;
+    culture?: string;
+    hiringVolume?: string;
+    budgetRange?: string;
+    contractTypes?: string[];
+    linkedin?: string;
+    twitter?: string;
+    github?: string;
+    glassdoor?: string;
   }): Observable<any> {
     const token = this.getToken();
     if (!token) {
@@ -213,10 +224,21 @@ export class AuthService {
     );
   }
 
-  // ─── GOOGLE LOGIN (will implement OAuth later) ───────────────────────────
-  loginWithGoogle(): void {
-    // For now, redirect to backend Google OAuth
-    window.location.href = `${this.API_URL}/google`;
+  // ─── GOOGLE LOGIN (Updated - sends data to backend) ──────────────────────
+  loginWithGoogle(googleData: { 
+    email: string; 
+    fullName: string; 
+    googleId: string; 
+    picture?: string 
+  }): Observable<any> {
+    return this.http.post(`${this.API_URL}/google`, googleData).pipe(
+      tap((response: any) => {
+        if (response.token) {
+          this.handleAuthResponse(response);
+        }
+      }),
+      catchError(this.handleError)
+    );
   }
 
   // ─── PASSWORD RESET (real backend) ───────────────────────────────────────
@@ -275,7 +297,7 @@ export class AuthService {
     } else if (error.status === 400) {
       errorMessage = error.error?.message || 'Invalid request';
     } else if (error.status === 0) {
-      errorMessage = 'Cannot connect to server. Make sure the backend is running on port 5000';
+      errorMessage = 'Cannot connect to server. Make sure the backend is running';
     }
     
     console.error('Auth error:', errorMessage);

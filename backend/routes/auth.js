@@ -127,6 +127,77 @@ router.post('/login', async (req, res) => {
 });
 
 // ============================================
+// GOOGLE SIGN-IN - Create or login user with Google
+// ============================================
+router.post('/google', async (req, res) => {
+  try {
+    const { email, fullName, googleId, picture } = req.body;
+
+    console.log('Google sign-in request for:', email);
+
+    // Check if user exists with this email
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Generate a random password for Google users (since passwordHash is required)
+      const randomPassword = Math.random().toString(36).slice(-16) + Math.random().toString(36).slice(-16);
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(randomPassword, salt);
+      
+      // Create new user
+      user = new User({
+        fullName: fullName,
+        email: email,
+        googleId: googleId,
+        role: 'freelancer', // Default role, can change during onboarding
+        onboarded: false,
+        passwordHash: passwordHash, // ← Now has a valid hash instead of empty string
+        profile: {
+          picture: picture || ''
+        }
+      });
+      await user.save();
+      console.log(`📝 New Google user created: ${email}`);
+    } else {
+      // Update Google ID if not set
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+        console.log(`🔄 Updated existing user with Google ID: ${email}`);
+      }
+      console.log(`✅ Existing user logged in with Google: ${email}`);
+    }
+
+    // Create JWT token
+    const token = jwt.sign(
+      { 
+        userId: user._id, 
+        email: user.email, 
+        role: user.role 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        onboarded: user.onboarded
+      }
+    });
+
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+    res.status(500).json({ message: 'Server error during Google sign-in: ' + error.message });
+  }
+});
+
+// ============================================
 // GET CURRENT USER - For validating token
 // ============================================
 router.get('/me', async (req, res) => {
