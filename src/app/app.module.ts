@@ -24,23 +24,23 @@ import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-pas
 
 // Interceptor
 import { authInterceptor } from './shared/interceptors/auth.interceptor';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
-import { ProfileComponent } from './pages/profile/profile.component';
+import { DashboardComponent } from './pages/Individual/dashboard/dashboard.component';
+import { ProfileComponent } from './pages/Individual/profile/profile.component';
 import { JobsComponent } from './pages/jobs/jobs.component';
 import { JobDetailComponent } from './pages/job-detail/job-detail.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
-import { CompaniesComponent } from './pages/companies/companies.component';
-import { CompanyDetailComponent } from './pages/company-detail/company-detail.component';
+import { CompaniesComponent } from './pages/Company/companies/companies.component';
+import { CompanyDetailComponent } from './pages/Company/company-detail/company-detail.component';
 import { ResourcesComponent } from './pages/resources/resources.component';
 import { SalaryGuideComponent } from './pages/salary-guide/salary-guide.component';
 import { PostJobComponent } from './pages/post-job/post-job.component';
-import { OnboardingComponent } from './pages/onboarding/onboarding.component';
+import { OnboardingComponent } from './pages/Individual/onboarding/onboarding.component';
 import { TalentComponent } from './pages/talent/talent.component';
 import { PricingComponent } from './pages/pricing/pricing.component';
-import { CompanyOnboardingComponent } from './pages/company-onboarding/company-onboarding.component';
-import { EmployerDashboardComponent } from './pages/employer-dashboard/employer-dashboard.component';
-import { EmployerProfileComponent } from './pages/employer-profile/employer-profile.component';
+import { CompanyOnboardingComponent } from './pages/Company/company-onboarding/company-onboarding.component';
+import { EmployerDashboardComponent } from './pages/Company/employer-dashboard/employer-dashboard.component';
+import { EmployerProfileComponent } from './pages/Company/employer-profile/employer-profile.component';
 import { MessagesComponent } from './pages/messages/messages.component';
 
 

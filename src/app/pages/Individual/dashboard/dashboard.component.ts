@@ -4,7 +4,7 @@ import {
   ChangeDetectionStrategy, ChangeDetectorRef
 } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { AuthService } from '../../shared/services/auth.service';
+import { AuthService } from 'src/app/shared/services/auth.service';
 
 export type DashTab = 'overview' | 'applications' | 'saved' | 'messages';
 

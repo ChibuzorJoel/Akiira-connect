@@ -4,7 +4,7 @@ import {
   ChangeDetectionStrategy, ChangeDetectorRef
 } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { AuthService, AuthUser } from '../../shared/services/auth.service';
+import { AuthService, AuthUser } from 'src/app/shared/services/auth.service';
 
 export interface WorkExperience {
   id: number;

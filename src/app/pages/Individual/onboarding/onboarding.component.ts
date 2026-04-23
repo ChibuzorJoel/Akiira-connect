@@ -6,8 +6,8 @@ import {
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { AuthService }         from '../../shared/services/auth.service';
-import { UserProfileService }  from '../../shared/services/user-profile.service';
+import { AuthService } from 'src/app/shared/services/auth.service';
+import { UserProfileService } from 'src/app/shared/services/user-profile.service';
 
 @Component({
   selector: 'app-onboarding',
