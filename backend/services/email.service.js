@@ -14,8 +14,8 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false,
     ciphers: 'SSLv3'
   },
-  socketTimeout: 30000, // 30 seconds timeout
-  connectionTimeout: 30000,
+  socketTimeout: 120000, // 120 seconds timeout
+  connectionTimeout: 120000,
   // Force IPv4
   family: 4,
 });
