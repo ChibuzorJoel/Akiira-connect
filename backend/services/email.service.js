@@ -1,42 +1,27 @@
 // backend/services/email.service.js
-const nodemailer = require('nodemailer');
 
-// Create Gmail transporter with IPv4 forced
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,  // Use 587 instead of 465 (better for IPv4)
-  secure: false, // false for port 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-    ciphers: 'SSLv3'
-  },
-  socketTimeout: 120000, // 120 seconds timeout
-  connectionTimeout: 120000,
-  // Force IPv4
-  family: 4,
-});
+console.log('📧 Loading email service...');
 
-// Verify connection on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email service error:', error.message);
-    console.log('⚠️ Email will fallback to console logging');
-  } else {
-    console.log('✅ Email service ready to send emails');
-  }
-});
+const { Resend } = require('resend');
 
-// Send password reset email
+// ✅ Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Optional: quick startup check
+if (!process.env.RESEND_API_KEY) {
+  console.error('❌ RESEND_API_KEY missing');
+} else {
+  console.log('✅ Resend email service ready');
+}
+
+// 📧 Send password reset email
 async function sendPasswordResetEmail(to, otp) {
   try {
-    const mailOptions = {
-      from: `"Akiira Connect" <${process.env.EMAIL_USER}>`,
-      to: to,
+    const response = await resend.emails.send({
+      from: 'Akiira Connect <onboarding@resend.dev>', // change after domain verification
+      to,
       subject: 'Reset Your Akiira Connect Password',
+
       html: `
         <!DOCTYPE html>
         <html>
@@ -84,27 +69,33 @@ async function sendPasswordResetEmail(to, otp) {
         </body>
         </html>
       `,
+
       text: `
-        Akiira Connect - Password Reset
-        
-        Your OTP code is: ${otp}
-        
-        This code expires in 15 minutes.
-        
-        If you didn't request this, please ignore this email.
-        
-        ---
-        Akiira Connect - Find your next remote opportunity
+Akiira Connect - Password Reset
+
+Your OTP code is: ${otp}
+
+This code expires in 15 minutes.
+
+If you didn't request this, please ignore this email.
+
+---
+Akiira Connect - Find your next remote opportunity
       `,
+    });
+
+    console.log(`✅ Password reset email sent to ${to}`);
+    return {
+      success: true,
+      messageId: response?.data?.id || null,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Password reset email sent to ${to}`);
-    return { success: true, messageId: info.messageId };
-    
   } catch (error) {
     console.error('❌ Failed to send email:', error.message);
-    // Return false but don't throw - we'll fallback to console
+
+    // ✅ fallback (important for dev/testing)
+    console.log(`📧 [FALLBACK OTP for ${to}]: ${otp}`);
+
     return { success: false, error: error.message };
   }
 }
