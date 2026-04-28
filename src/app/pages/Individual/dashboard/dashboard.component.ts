@@ -1,7 +1,7 @@
 // src/app/pages/dashboard/dashboard.component.ts
 import {
-  Component, OnInit, OnDestroy,
-  ChangeDetectionStrategy, ChangeDetectorRef
+  Component, OnInit, OnDestroy, AfterViewInit,
+  ChangeDetectionStrategy, ChangeDetectorRef, ElementRef
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/shared/services/auth.service';
@@ -9,40 +9,19 @@ import { AuthService } from 'src/app/shared/services/auth.service';
 export type DashTab = 'overview' | 'applications' | 'saved' | 'messages';
 
 export interface Application {
-  id: number;
-  title: string;
-  company: string;
-  logo: string;
-  logoColor: string;
-  salary: string;
-  type: string;
-  appliedDate: string;
+  id: number; title: string; company: string; logo: string; logoColor: string;
+  salary: string; type: string; appliedDate: string;
   status: 'applied' | 'review' | 'interview' | 'offer' | 'rejected';
 }
 
 export interface SavedJob {
-  id: number;
-  title: string;
-  company: string;
-  logo: string;
-  logoColor: string;
-  salary: string;
-  location: string;
-  tags: string[];
-  savedDate: string;
-  matchScore: number;
+  id: number; title: string; company: string; logo: string; logoColor: string;
+  salary: string; location: string; tags: string[]; savedDate: string; matchScore: number;
 }
 
 export interface Message {
-  id: number;
-  from: string;
-  company: string;
-  logo: string;
-  logoColor: string;
-  preview: string;
-  time: string;
-  unread: number;
-  online: boolean;
+  id: number; from: string; company: string; logo: string; logoColor: string;
+  preview: string; time: string; unread: number; online: boolean;
   thread: { sender: 'me' | 'them'; text: string; time: string }[];
 }
 
@@ -52,14 +31,16 @@ export interface Message {
   styleUrls: ['./dashboard.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   activeTab: DashTab = 'overview';
   activeMessageId    = 1;
   messageInput       = '';
   profileStrength    = 74;
+  sidebarOpen        = false;   // mobile sidebar toggle
 
-  private subs = new Subscription();
+  private subs     = new Subscription();
+  private observer!: IntersectionObserver;
 
   readonly stats = [
     { icon: '📨', label: 'Applied',       value: 12,  change: '+3 this week',  up: true  },
@@ -134,51 +115,69 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { icon: '👁️', text: 'Vercel viewed your profile',                      time: '5h ago',  color: '#2563eb' },
     { icon: '✨', text: 'Shopify sent you an offer!',                       time: '1d ago',  color: '#f59e0b' },
     { icon: '📩', text: 'New message from Amara at GitHub',                 time: '2d ago',  color: '#8b5cf6' },
-    { icon: '✓',  text: 'Applied to Angular Developer at Atlassian',       time: '3d ago',  color: '#71717a' },
+    { icon: '✓',  text: 'Applied to Angular Developer at Atlassian',        time: '3d ago',  color: '#71717a' },
   ];
 
-  // ✅ FIX: compute firstName as a safe string property — no optional chaining in template
   get firstName(): string {
     const name = this.auth.currentUser?.fullName || 'Alex';
     return name.split(' ')[0];
   }
+  get userInitial(): string { return (this.auth.currentUser?.fullName || 'A').charAt(0).toUpperCase(); }
+  get activeMessage(): Message | undefined { return this.messages.find(m => m.id === this.activeMessageId); }
+  get totalUnread(): number { return this.messages.reduce((sum, m) => sum + m.unread, 0); }
 
-  get userInitial(): string {
-    return (this.auth.currentUser?.fullName || 'A').charAt(0).toUpperCase();
-  }
-
-  get activeMessage(): Message | undefined {
-    return this.messages.find(m => m.id === this.activeMessageId);
-  }
-
-  get totalUnread(): number {
-    return this.messages.reduce((sum, m) => sum + m.unread, 0);
-  }
-
-  constructor(private auth: AuthService, private cdr: ChangeDetectorRef) {}
+  constructor(private auth: AuthService, private cdr: ChangeDetectorRef, private el: ElementRef) {}
 
   ngOnInit(): void {}
 
-  ngOnDestroy(): void { this.subs.unsubscribe(); }
+  ngAfterViewInit(): void {
+    // Scroll-triggered reveal for cards
+    this.observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); }),
+      { threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
+    );
+    const targets = this.el.nativeElement.querySelectorAll(
+      '.stat-card, .dash-card, .saved-card, .act-item, .reco-item, .profile-card, .tips-card'
+    );
+    targets.forEach((t: Element) => this.observer.observe(t));
+  }
 
-  setTab(tab: DashTab): void     { this.activeTab = tab; this.cdr.markForCheck(); }
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
+    if (this.observer) this.observer.disconnect();
+  }
+
+  setTab(tab: DashTab): void {
+    this.activeTab = tab;
+    this.sidebarOpen = false;
+    this.cdr.markForCheck();
+    // Re-observe new elements after tab switch
+    setTimeout(() => {
+      const targets = this.el.nativeElement.querySelectorAll(
+        '.stat-card:not(.in-view), .dash-card:not(.in-view), .saved-card:not(.in-view), .act-item:not(.in-view), .reco-item:not(.in-view)'
+      );
+      targets.forEach((t: Element) => this.observer?.observe(t));
+    }, 50);
+  }
+
+  toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; this.cdr.markForCheck(); }
 
   setActiveMessage(id: number): void {
     this.activeMessageId = id;
     const msg = this.messages.find(m => m.id === id);
-    if (msg) { msg.unread = 0; }
+    if (msg) msg.unread = 0;
     this.cdr.markForCheck();
   }
 
   sendMessage(): void {
     const text = this.messageInput.trim();
-    if (!text || !this.activeMessage) { return; }
+    if (!text || !this.activeMessage) return;
     this.activeMessage.thread.push({ sender: 'me', text, time: 'Just now' });
     this.messageInput = '';
     this.cdr.markForCheck();
     setTimeout(() => {
       const el = document.querySelector('.msg-thread-body');
-      if (el) { el.scrollTop = el.scrollHeight; }
+      if (el) el.scrollTop = el.scrollHeight;
     }, 50);
   }
 
@@ -189,24 +188,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   statusLabel(status: Application['status']): string {
     const map: Record<Application['status'], string> = {
-      applied:   '📩 Applied',
-      review:    '👀 In Review',
-      interview: '🎯 Interview',
-      offer:     '🎉 Offer',
-      rejected:  '✕ Closed',
+      applied: '📩 Applied', review: '👀 In Review',
+      interview: '🎯 Interview', offer: '🎉 Offer', rejected: '✕ Closed',
     };
     return map[status];
   }
 
   statusClass(status: Application['status']): string {
-    const map: Record<Application['status'], string> = {
-      applied:   'status-applied',
-      review:    'status-review',
-      interview: 'status-interview',
-      offer:     'status-offer',
-      rejected:  'status-rejected',
-    };
-    return map[status];
+    return `status-${status}`;
   }
 
   trackById(_: number, item: { id: number }): number { return item.id; }
