@@ -1,31 +1,32 @@
 <!-- src/app/pages/home/home.component.html -->
 <div class="home">
 
-  <!-- ══════════════════════════════════
-       HERO
-  ══════════════════════════════════ -->
+  <!-- ══════════════════════════════════ HERO ══════════════════════════════════ -->
   <section class="hero">
     <div class="hero-bg">
       <div class="hero-orb hero-orb-1"></div>
       <div class="hero-orb hero-orb-2"></div>
       <div class="hero-orb hero-orb-3"></div>
       <div class="hero-grid"></div>
+      <div class="hero-particles">
+        <span class="particle" *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12]"></span>
+      </div>
     </div>
 
     <div class="hero-container">
       <div class="hero-content">
 
-        <!-- Eyebrow pill -->
         <div class="hero-pill">
           <span class="hp-dot"></span>
           <span>2,847 new remote jobs posted this week</span>
         </div>
 
-        <!-- Headline -->
         <h1 class="hero-title">
-          Land Your Next<br>
-          <span class="hero-title-accent">Remote Job</span><br>
-          Without the Hunt
+          <span class="ht-line ht-line-1">Land Your Next</span>
+          <span class="ht-line ht-line-2">
+            <span class="hero-title-accent">Remote Job</span>
+          </span>
+          <span class="ht-line ht-line-3">Without the Hunt</span>
         </h1>
 
         <p class="hero-sub">
@@ -33,7 +34,6 @@
           full-time roles from companies that respect your time.
         </p>
 
-        <!-- Search bar -->
         <div class="hero-search">
           <div class="hs-inner">
             <div class="hs-field">
@@ -55,7 +55,7 @@
               <input type="text" [(ngModel)]="searchLocation" placeholder="Location" (keydown.enter)="search()"/>
             </div>
             <button class="hs-btn" (click)="search()">
-              Find Jobs
+              <span>Find Jobs</span>
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
               </svg>
@@ -63,19 +63,28 @@
           </div>
           <div class="hs-popular">
             <span class="hsp-label">Popular:</span>
-            <button *ngFor="let c of ['React Developer','UX Designer','Data Analyst','Node.js','DevOps']"
+            <button *ngFor="let c of ['React','UX Design','Data','Node.js','DevOps']"
               class="hsp-tag" (click)="searchQuery = c; search()">{{ c }}</button>
           </div>
         </div>
 
+        <div class="hero-trust">
+          <div class="ht-avatars">
+            <div class="hta" style="background:#6366f1">AK</div>
+            <div class="hta" style="background:#0ea5e9">PS</div>
+            <div class="hta" style="background:#10b981">MC</div>
+            <div class="hta" style="background:#f59e0b">TO</div>
+          </div>
+          <span class="ht-text"><strong>320K+</strong> freelancers hired remotely</span>
+        </div>
       </div>
 
-      <!-- Floating job card (hero right) -->
+      <!-- Floating job card -->
       <div class="hero-card-float" aria-hidden="true">
         <div class="hcf-card" (click)="viewJob(1)">
           <div class="hcf-top">
             <div class="hcf-logo" style="background:#6366f1">S</div>
-            <div>
+            <div class="hcf-info">
               <div class="hcf-title">Senior React Dev</div>
               <div class="hcf-company">Stripe · Remote</div>
             </div>
@@ -89,65 +98,60 @@
             <button class="hcf-apply">Quick Apply →</button>
           </div>
         </div>
-
         <div class="hcf-badge hcf-badge-match">
           <span class="hcf-badge-icon">🎯</span>
           <div><strong>94%</strong><span>Match Rate</span></div>
         </div>
-
-        <div class="hcf-badge hcf-badge-speed" style="bottom:70px;right:-28px">
+        <div class="hcf-badge hcf-badge-speed">
           <span class="hcf-badge-icon">⚡</span>
           <div><strong>18hrs</strong><span>Avg. Response</span></div>
         </div>
-
-        <div class="hcf-hired">
-          <div class="hcf-avatars">
-            <div class="hcf-av" style="background:#6366f1">AK</div>
-            <div class="hcf-av" style="background:#0ea5e9;margin-left:-8px">PS</div>
-            <div class="hcf-av" style="background:#10b981;margin-left:-8px">MC</div>
-          </div>
-          <span>+48 hired this week</span>
-        </div>
       </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="scroll-hint">
+      <div class="sh-mouse"><div class="sh-wheel"></div></div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════
-       STATS BAR
-  ══════════════════════════════════ -->
+  <!-- ══════════════════════════════════ STATS ══════════════════════════════════ -->
   <section class="stats-bar">
     <div class="sb-container">
-      <div class="sb-item" *ngFor="let s of stats">
+      <div class="sb-item" *ngFor="let s of stats; let i = index" [style.animation-delay]="(i * 0.08) + 's'">
         <div class="sb-value">{{ s.value }}</div>
         <div class="sb-label">{{ s.label }}</div>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════
-       COMPANIES
-  ══════════════════════════════════ -->
+  <!-- ══════════════════════════════════ COMPANIES ══════════════════════════════════ -->
   <section class="companies-section">
     <div class="section-container">
       <div class="section-eyebrow">Trusted by teams at</div>
-      <div class="companies-row">
-        <div *ngFor="let c of companies" class="company-logo-pill">
-          <div class="clp-icon" [style.background]="c.color">{{ c.logo }}</div>
-          <span>{{ c.name }}</span>
+      <div class="companies-track-wrap">
+        <div class="companies-track">
+          <div *ngFor="let c of companies" class="company-logo-pill">
+            <div class="clp-icon" [style.background]="c.color">{{ c.logo }}</div>
+            <span>{{ c.name }}</span>
+          </div>
+          <!-- Duplicate for infinite scroll -->
+          <div *ngFor="let c of companies" class="company-logo-pill" aria-hidden="true">
+            <div class="clp-icon" [style.background]="c.color">{{ c.logo }}</div>
+            <span>{{ c.name }}</span>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════
-       FEATURED JOBS
-  ══════════════════════════════════ -->
+  <!-- ══════════════════════════════════ FEATURED JOBS ══════════════════════════════════ -->
   <section class="featured-section">
     <div class="section-container">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Jobs for you</div>
-          <h2 class="section-title">Top Remote Roles This Week</h2>
+          <h2 class="section-title">Top Remote Roles <span class="title-accent">This Week</span></h2>
         </div>
         <div class="cat-tabs">
           <button
@@ -161,10 +165,12 @@
 
       <div class="featured-grid">
         <div
-          *ngFor="let job of featuredJobs"
+          *ngFor="let job of featuredJobs; let i = index"
           class="featured-card"
+          [style.animation-delay]="(i * 0.1) + 's'"
           (click)="viewJob(job.id)"
         >
+          <div class="fc-glow" [style.background]="job.logoColor"></div>
           <div class="fc-top">
             <div class="fc-logo" [style.background]="job.logoColor">{{ job.logo }}</div>
             <div class="fc-match" *ngIf="job.matchScore">{{ job.matchScore }}% match</div>
@@ -178,12 +184,13 @@
             <span class="fc-salary">{{ job.salary }}</span>
             <span class="fc-posted">{{ job.postedAt }}</span>
           </div>
+          <div class="fc-hover-action">View Job →</div>
         </div>
       </div>
 
       <div class="section-cta">
         <button class="cta-link" (click)="goToJobs()">
-          View all {{ isLoggedIn ? 'jobs' : 'remote jobs' }}
+          <span>View all remote jobs</span>
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
           </svg>
@@ -192,20 +199,20 @@
     </div>
   </section>
 
-  <!-- ══════════════════════════════════
-       HOW IT WORKS
-  ══════════════════════════════════ -->
+  <!-- ══════════════════════════════════ HOW IT WORKS ══════════════════════════════════ -->
   <section class="how-section">
     <div class="section-container">
       <div class="section-header center">
         <div class="section-eyebrow">Simple process</div>
         <h2 class="section-title">Go from signed up to hired<br><span class="title-accent">in days, not months</span></h2>
       </div>
-
+      <div class="how-connector"></div>
       <div class="how-grid">
-        <div class="how-card" *ngFor="let h of howItWorks; let i = index" [style.animation-delay]="(i * 0.1) + 's'">
-          <div class="how-step">{{ h.step }}</div>
-          <div class="how-icon">{{ h.icon }}</div>
+        <div class="how-card" *ngFor="let h of howItWorks; let i = index" [style.animation-delay]="(i * 0.12) + 's'">
+          <div class="how-number">{{ h.step }}</div>
+          <div class="how-icon-wrap">
+            <div class="how-icon">{{ h.icon }}</div>
+          </div>
           <h3 class="how-title">{{ h.title }}</h3>
           <p class="how-desc">{{ h.desc }}</p>
         </div>
@@ -213,19 +220,15 @@
     </div>
   </section>
 
-  <!-- ══════════════════════════════════
-       TESTIMONIALS
-  ══════════════════════════════════ -->
+  <!-- ══════════════════════════════════ TESTIMONIALS ══════════════════════════════════ -->
   <section class="testimonials-section">
     <div class="section-container">
       <div class="section-header center">
         <div class="section-eyebrow">Real results</div>
-        <h2 class="section-title">Freelancers who found their<br>remote career here</h2>
+        <h2 class="section-title">Freelancers who found their<br><span class="title-accent">remote career here</span></h2>
       </div>
-
       <div class="testi-wrap">
         <div class="testi-card" *ngIf="testimonials[activeTestimonial] as t">
-          <div class="tc-quote">"</div>
           <p class="tc-text">{{ t.text }}</p>
           <div class="tc-author">
             <div class="tc-av" [style.background]="t.color">{{ t.avatar }}</div>
@@ -235,7 +238,6 @@
             </div>
           </div>
         </div>
-
         <div class="testi-dots">
           <button
             *ngFor="let t of testimonials; let i = index"
@@ -249,44 +251,27 @@
     </div>
   </section>
 
-  <!-- ══════════════════════════════════
-       CTA SECTION
-  ══════════════════════════════════ -->
+  <!-- ══════════════════════════════════ CTA ══════════════════════════════════ -->
   <section class="cta-section" *ngIf="!isLoggedIn">
     <div class="section-container">
       <div class="cta-card">
         <div class="cta-bg"></div>
+        <div class="cta-orbs">
+          <div class="cta-orb cta-orb-1"></div>
+          <div class="cta-orb cta-orb-2"></div>
+        </div>
         <div class="cta-inner">
           <div class="cta-eyebrow">Free forever · No credit card</div>
           <h2 class="cta-title">Ready to find your<br>next remote role?</h2>
           <p class="cta-sub">Join 320,000+ freelancers who landed remote jobs through Akiira Connect.</p>
           <div class="cta-buttons">
             <a routerLink="/auth/register" class="cta-btn-primary">
-              Get Started Free
+              <span>Get Started Free</span>
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
               </svg>
             </a>
             <a routerLink="/auth/login" class="cta-btn-ghost">Sign In</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Logged-in CTA -->
-  <section class="cta-section" *ngIf="isLoggedIn">
-    <div class="section-container">
-      <div class="cta-card">
-        <div class="cta-bg"></div>
-        <div class="cta-inner">
-          <h2 class="cta-title">Your next opportunity<br>is waiting</h2>
-          <p class="cta-sub">Browse 48,000+ remote jobs matched to your skills.</p>
-          <div class="cta-buttons">
-            <a routerLink="/jobs" class="cta-btn-primary">
-              Browse Jobs →
-            </a>
-            <a routerLink="/profile" class="cta-btn-ghost">Complete Profile</a>
           </div>
         </div>
       </div>

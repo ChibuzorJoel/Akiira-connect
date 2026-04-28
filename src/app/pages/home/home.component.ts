@@ -1,7 +1,8 @@
 // src/app/pages/home/home.component.ts
 import {
   Component, OnInit, OnDestroy,
-  ChangeDetectionStrategy, ChangeDetectorRef
+  ChangeDetectionStrategy, ChangeDetectorRef,
+  ElementRef, AfterViewInit
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -13,7 +14,7 @@ import { AuthService } from '../../shared/services/auth.service';
   styleUrls: ['./home.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   searchQuery    = '';
   searchLocation = 'Remote';
@@ -29,17 +30,17 @@ export class HomeComponent implements OnInit, OnDestroy {
   ];
 
   readonly featuredJobs = [
-    { id: 6,  logo: 'O', logoColor: '#8b5cf6', title: 'AI / ML Engineer',          company: 'OpenAI',  salary: '$160K–$220K', tags: ['Python','PyTorch'], matchScore: 91, postedAt: '3h ago'  },
-    { id: 1,  logo: 'S', logoColor: '#6366f1', title: 'Senior React Developer',     company: 'Stripe',  salary: '$120K–$160K', tags: ['React','TypeScript'], matchScore: 92, postedAt: '2h ago' },
-    { id: 3,  logo: 'V', logoColor: '#10b981', title: 'Full-Stack Engineer',        company: 'Vercel',  salary: '$110K–$150K', tags: ['Angular','Node.js'], matchScore: 95, postedAt: '1d ago' },
-    { id: 7,  logo: 'S', logoColor: '#059669', title: 'Frontend Architect',         company: 'Shopify', salary: '$140K–$190K', tags: ['React','Next.js'], matchScore: 87, postedAt: '4h ago'   },
+    { id: 6,  logo: 'O', logoColor: '#8b5cf6', title: 'AI / ML Engineer',       company: 'OpenAI',  salary: '$160K–$220K', tags: ['Python','PyTorch'], matchScore: 91, postedAt: '3h ago' },
+    { id: 1,  logo: 'S', logoColor: '#6366f1', title: 'Senior React Developer',  company: 'Stripe',  salary: '$120K–$160K', tags: ['React','TypeScript'], matchScore: 92, postedAt: '2h ago' },
+    { id: 3,  logo: 'V', logoColor: '#10b981', title: 'Full-Stack Engineer',     company: 'Vercel',  salary: '$110K–$150K', tags: ['Angular','Node.js'], matchScore: 95, postedAt: '1d ago' },
+    { id: 7,  logo: 'S', logoColor: '#059669', title: 'Frontend Architect',      company: 'Shopify', salary: '$140K–$190K', tags: ['React','Next.js'], matchScore: 87, postedAt: '4h ago' },
   ];
 
   readonly testimonials = [
-    { name: 'Adaeze Okonkwo', role: 'UX Designer · Notion', avatar: 'AO', color: '#6366f1', text: 'Found my dream remote contract in 6 days. The match score feature is incredibly accurate — every job it recommended was a genuine fit.' },
-    { name: 'Marcus Teixeira', role: 'ML Engineer · Scale AI', avatar: 'MT', color: '#0ea5e9', text: "Negotiated $40K above my asking price using the salary guide. This platform completely changed how I approach job hunting." },
-    { name: 'Priya Nair', role: 'DevOps Engineer · Figma', avatar: 'PN', color: '#10b981', text: 'Applied to 8 jobs Sunday morning. By Thursday I had 3 interviews. The quick-apply feature saves hours per application.' },
-    { name: 'Tunde Adeyemi', role: 'Senior Frontend Dev · GitHub', avatar: 'TA', color: '#f59e0b', text: 'As someone in Lagos, finding legitimate remote work used to be a nightmare. Akiira Connect opened doors I thought were closed to me.' },
+    { name: 'Adaeze Okonkwo', role: 'UX Designer · Notion',     avatar: 'AO', color: '#6366f1', text: 'Found my dream remote contract in 6 days. The match score feature is incredibly accurate — every job it recommended was a genuine fit.' },
+    { name: 'Marcus Teixeira', role: 'ML Engineer · Scale AI',   avatar: 'MT', color: '#0ea5e9', text: 'Negotiated $40K above my asking price using the salary guide. This platform completely changed how I approach job hunting.' },
+    { name: 'Priya Nair',     role: 'DevOps Engineer · Figma',   avatar: 'PN', color: '#10b981', text: 'Applied to 8 jobs Sunday morning. By Thursday I had 3 interviews. The quick-apply feature saves hours per application.' },
+    { name: 'Tunde Adeyemi',  role: 'Senior Frontend Dev · GitHub', avatar: 'TA', color: '#f59e0b', text: 'As someone in Lagos, finding legitimate remote work used to be a nightmare. Akiira Connect opened doors I thought were closed to me.' },
   ];
 
   readonly howItWorks = [
@@ -67,12 +68,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   activeTestimonial = 0;
   isLoggedIn        = false;
   private subs      = new Subscription();
-  private ticker!:   ReturnType<typeof setInterval>;
+  private ticker!:  ReturnType<typeof setInterval>;
+  private observer!: IntersectionObserver;
 
   constructor(
-    private router: Router,
-    private auth:   AuthService,
-    private cdr:    ChangeDetectorRef,
+    private router:  Router,
+    private auth:    AuthService,
+    private cdr:     ChangeDetectorRef,
+    private el:      ElementRef,
   ) {}
 
   ngOnInit(): void {
@@ -82,15 +85,40 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       })
     );
-    this.ticker = setInterval(() => {
-      this.activeTestimonial = (this.activeTestimonial + 1) % this.testimonials.length;
-      this.cdr.markForCheck();
-    }, 5000);
+    this.startTestimonialTicker();
+  }
+
+  ngAfterViewInit(): void {
+    // Intersection Observer for scroll-triggered animations
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            // Don't unobserve — keeps animation state clean
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    const targets = this.el.nativeElement.querySelectorAll(
+      '.sb-item, .featured-card, .how-card, .testi-card, .company-logo-pill, .section-title, .section-eyebrow, .cta-card'
+    );
+    targets.forEach((t: Element) => this.observer.observe(t));
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     clearInterval(this.ticker);
+    if (this.observer) this.observer.disconnect();
+  }
+
+  private startTestimonialTicker(): void {
+    this.ticker = setInterval(() => {
+      this.activeTestimonial = (this.activeTestimonial + 1) % this.testimonials.length;
+      this.cdr.markForCheck();
+    }, 5000);
   }
 
   search(): void {
@@ -110,10 +138,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   setTestimonial(i: number): void {
     this.activeTestimonial = i;
     clearInterval(this.ticker);
-    this.ticker = setInterval(() => {
-      this.activeTestimonial = (this.activeTestimonial + 1) % this.testimonials.length;
-      this.cdr.markForCheck();
-    }, 5000);
+    this.startTestimonialTicker();
     this.cdr.markForCheck();
   }
 }
